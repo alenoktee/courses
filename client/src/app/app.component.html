@@ -1,0 +1,10 @@
+<style>
+  
+</style>
+
+<main class="main">
+  <div class="content">
+    <h1 *ngIf="user() as u">Привет, {{ u.name }}</h1>
+<p *ngIf="!user()">Загрузка пользователя...</p>
+  </div>
+</main>

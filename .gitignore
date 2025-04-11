@@ -1,0 +1,17 @@
+# Ignore Visual Studio files
+.vs/
+*.user
+*.suo
+
+# Ignore build results
+bin/
+obj/
+
+# Ignore Angular environment and build
+dist/
+node_modules/
+.env
+
+# Ignore IDE settings
+.idea/
+.vscode/
