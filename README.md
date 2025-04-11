@@ -1,4 +1,4 @@
-# courses# Руководство по запуску проекта
+# Руководство по запуску проекта
 
 ## Необходимые компоненты
 
@@ -22,6 +22,17 @@
      "DefaultConnection": "Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=postgres"
    }
    ```
+
+### Настройка appsettings.json (/server)
+1. Зайдите в файл appsettings.json
+3. Обновите строку, добавив сюда свои данные из Google Cloud Console:
+   ```json
+   "Google": {
+      "ClientId": "ЗАТЫЧКА",
+      "ClientSecret": "ЗАТЫЧКА"
+    }
+   ```
+
 
 ### Запуск серверной части (ASP.NET Core)
 1. Откройте терминал и перейдите в директорию `server`:
