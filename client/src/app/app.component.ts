@@ -1,19 +1,29 @@
 import { Component, OnInit } from '@angular/core';
-import { UserService, User } from './services/user.service';
+import { CommonModule } from '@angular/common';
+import { RouterOutlet } from '@angular/router';
+import { AuthService } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
-  template: `<h1>{{ user?.name }}</h1>`,
+  standalone: true,
+  imports: [CommonModule, RouterOutlet],
+  templateUrl: './app.component.html',
+  styleUrl: './app.component.css'
 })
 export class AppComponent implements OnInit {
-  user: User | undefined;
+  isLoggedIn = false;
 
-  constructor(private userService: UserService) {}
+  constructor(private authService: AuthService) {}
 
-  ngOnInit(): void {
-    this.userService.getUser(1).subscribe({
-      next: user => this.user = user,
-      error: err => console.error('Ошибка загрузки:', err)
+  ngOnInit() {
+    this.authService.isAuthenticated$.subscribe(isAuth => {
+      this.isLoggedIn = isAuth;
     });
+
+    this.isLoggedIn = this.authService.isLoggedIn();
+  }
+
+  logout() {
+    this.authService.logout();
   }
 }
