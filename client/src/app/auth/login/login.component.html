@@ -1,0 +1,65 @@
+<!-- src/app/auth/login/login.component.html -->
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <h1>Вход в систему</h1>
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <div class="input-field">
+          <span class="input-icon email-icon"></span>
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            placeholder="Введите email"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Пароль</label>
+        <div class="input-field">
+          <span class="input-icon lock-icon"></span>
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            id="password"
+            formControlName="password"
+            placeholder="Введите пароль"
+            required
+          />
+          <span
+            class="password-toggle"
+            (click)="togglePasswordVisibility()"
+          >
+            <span class="eye-icon" [class.closed]="showPassword"></span>
+          </span>
+        </div>
+      </div>
+
+      <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+
+      <button type="submit" class="btn btn-primary" [disabled]="!loginForm.valid">
+        Войти
+      </button>
+
+      <div class="divider">
+        <span>или</span>
+      </div>
+
+      <button type="button" class="btn btn-primary google-button" (click)="googleLogin()">
+        <div class="google-icon"></div>
+        Войти через Google
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      <p>Нет аккаунта? <a routerLink="/auth/register">Зарегистрироваться</a></p>
+    </div>
+  </div>
+</div>

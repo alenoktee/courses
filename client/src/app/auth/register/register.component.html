@@ -1,0 +1,88 @@
+<div class="register-container">
+  <div class="register-card">
+    <div class="register-header">
+      <h1>Регистрация</h1>
+    </div>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <div class="input-field">
+          <span class="input-icon email-icon"></span>
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            placeholder="Введите email"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Пароль</label>
+        <div class="input-field">
+          <span class="input-icon lock-icon"></span>
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            id="password"
+            formControlName="password"
+            placeholder="Введите пароль"
+            required
+          />
+          <span
+            class="password-toggle"
+            (click)="togglePasswordVisibility('password')"
+          >
+            <span class="eye-icon" [class.closed]="showPassword"></span>
+          </span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="confirmPassword">Подтверждение пароля</label>
+        <div class="input-field">
+          <span class="input-icon lock-icon"></span>
+          <input
+            [type]="showConfirmPassword ? 'text' : 'password'"
+            id="confirmPassword"
+            formControlName="confirmPassword"
+            placeholder="Подтвердите пароль"
+            required
+          />
+          <span
+            class="password-toggle"
+            (click)="togglePasswordVisibility('confirmPassword')"
+          >
+            <span class="eye-icon" [class.closed]="showConfirmPassword"></span>
+          </span>
+        </div>
+      </div>
+
+      <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="!registerForm.valid"
+      >
+        Зарегистрироваться
+      </button>
+
+      <div class="divider">
+        <span>или</span>
+      </div>
+
+      <button type="button" class="btn btn-primary google-button" (click)="googleLogin()">
+        <div class="google-icon"></div>
+        Зарегистрироваться через Google
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      <p>Уже есть аккаунт? <a routerLink="/auth/login">Войти</a></p>
+    </div>
+  </div>
+</div>
