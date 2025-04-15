@@ -84,4 +84,15 @@ export class AuthService {
   public isLoggedIn(): boolean {
     return !!this.getToken();
   }
+
+  register(email: string, password: string, firstName: string, lastName: string, dateOfBirth?: string, phone?: string): Observable<any> {
+    return this.http.post<any>(`${this.API_URL}/register`, { 
+      email, 
+      password, 
+      firstName, 
+      lastName, 
+      dateOfBirth, 
+      phone 
+    });
+  }
 } 

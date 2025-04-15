@@ -49,6 +49,14 @@ export class LoginComponent {
   }
 
   googleLogin() {
-    window.open('http://localhost:4200/api/auth/google', '_self');
+    const clientId = '196351865869-kq6bbtfs5f9agrfk192kiff6kgnnvunb.apps.googleusercontent.com';
+    const redirectUri = encodeURIComponent('http://localhost:4200/auth-callback');
+    const scope = encodeURIComponent('email profile');
+    const responseType = 'code';
+    const accessType = 'offline';
+    
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=${responseType}&access_type=${accessType}`;
+    
+    window.location.href = authUrl;
   }
 }

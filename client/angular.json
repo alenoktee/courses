@@ -25,6 +25,7 @@
               "src/assets"
             ],
             "styles": [
+              "src/styles/global.scss",
               "src/styles.scss"
             ],
             "scripts": []

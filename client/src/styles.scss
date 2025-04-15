@@ -5,13 +5,15 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Roboto', sans-serif !important;
+  font-family: "Poppins", sans-serif !important;
+  font-weight: 400;
 }
 
 html, body {
   height: 100%;
   margin: 0;
-  font-family: 'Roboto', sans-serif;
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
 }
 
 body {
@@ -19,38 +21,16 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4, h5, h6, p, span, div, a, button, input, label {
-  font-family: 'Roboto', sans-serif !important;
+h1, h2, h3, h4, h5, h6, p, span, div {
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
+}
+
+a, button {
+  font-family: "Poppins", sans-serif;
+  font-weight: 300;
 }
 
 .mat-mdc-form-field {
   width: 100%;
 }
-
-.mat-mdc-button {
-  font-family: 'Roboto', sans-serif !important;
-}
-
-.mat-mdc-form-field {
-  font-family: 'Roboto', sans-serif !important;
-}
-
-.mat-mdc-form-field-label {
-  font-family: 'Roboto', sans-serif !important;
-}
-
-.mat-mdc-input-element {
-  font-family: 'Roboto', sans-serif !important;
-}
-
-.mat-mdc-card {
-  font-family: 'Roboto', sans-serif !important;
-}
-
-.mat-mdc-card-title {
-  font-family: 'Roboto', sans-serif !important;
-}
-
-.mat-mdc-card-subtitle {
-  font-family: 'Roboto', sans-serif !important;
-} 

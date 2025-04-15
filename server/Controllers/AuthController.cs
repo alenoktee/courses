@@ -13,11 +13,14 @@ using backend.Data;
 using backend.Models;
 using System.Linq;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Identity;
+using System.Security.Cryptography;
+using Microsoft.EntityFrameworkCore;
 
 namespace backend.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/auth")]
     public class AuthController : ControllerBase
     {
         private readonly IConfiguration _configuration;
@@ -65,10 +68,14 @@ namespace backend.Controllers
                 Console.WriteLine($"FamilyName: {userInfo.FamilyName}");
                 Console.WriteLine($"Picture: {userInfo.Picture?.Substring(0, 30)}...");
 
-                string userName = !string.IsNullOrEmpty(userInfo.Name) ? userInfo.Name :
-                                  !string.IsNullOrEmpty(userInfo.GivenName) ? userInfo.GivenName :
+                string firstName = !string.IsNullOrEmpty(userInfo.GivenName) ? userInfo.GivenName :
+                                  !string.IsNullOrEmpty(userInfo.Name) ? userInfo.Name.Split(' ')[0] :
                                   !string.IsNullOrEmpty(userInfo.Email) ? userInfo.Email.Split('@')[0] :
-                                  "Google User";
+                                  "Google";
+
+                string lastName = !string.IsNullOrEmpty(userInfo.FamilyName) ? userInfo.FamilyName :
+                                 !string.IsNullOrEmpty(userInfo.Name) && userInfo.Name.Split(' ').Length > 1 ? userInfo.Name.Split(' ')[1] :
+                                 "User";
 
                 var user = _context.Users.FirstOrDefault(u => u.GoogleId == userInfo.Id);
                 
@@ -77,12 +84,14 @@ namespace backend.Controllers
                     user = new User
                     {
                         GoogleId = userInfo.Id ?? "unknown",
-                        Name = userName,
+                        FirstName = firstName,
+                        LastName = lastName,
                         Email = userInfo.Email ?? "noemail@example.com",
-                        ProfilePictureUrl = userInfo.Picture
+                        ProfilePictureUrl = userInfo.Picture,
+                        Role = "обучающийся"
                     };
                     
-                    Console.WriteLine($"Создаем нового пользователя: GoogleId={user.GoogleId}, Name={user.Name}, Email={user.Email}");
+                    Console.WriteLine($"Создаем нового пользователя: GoogleId={user.GoogleId}, FirstName={user.FirstName}, LastName={user.LastName}, Email={user.Email}");
                     
                     _context.Users.Add(user);
                     await _context.SaveChangesAsync();
@@ -93,7 +102,8 @@ namespace backend.Controllers
                 {
                     Console.WriteLine($"Обновляем существующего пользователя с ID={user.Id}");
                     
-                    user.Name = userName;
+                    user.FirstName = firstName;
+                    user.LastName = lastName;
                     user.Email = userInfo.Email ?? user.Email;
                     user.ProfilePictureUrl = userInfo.Picture ?? user.ProfilePictureUrl;
                     
@@ -116,6 +126,62 @@ namespace backend.Controllers
                     Console.WriteLine($"Внутреннее исключение: {ex.InnerException.Message}");
                 }
                 return StatusCode(500, $"Внутренняя ошибка сервера: {ex.Message}");
+            }
+        }
+
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+        {
+            Console.WriteLine($"Получен запрос на регистрацию: Email={request.Email}, FirstName={request.FirstName}, LastName={request.LastName}");
+
+            if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
+            {
+                Console.WriteLine("Ошибка: Email или пароль пустые");
+                return BadRequest("Email и пароль обязательны");
+            }
+
+            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+            if (existingUser != null)
+            {
+                Console.WriteLine($"Ошибка: пользователь с email {request.Email} уже существует");
+                return BadRequest("Пользователь с таким email уже существует");
+            }
+
+            try
+            {
+                var user = new User
+                {
+                    Email = request.Email,
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
+                    BirthDate = request.DateOfBirth != null ? DateTime.Parse(request.DateOfBirth).ToUniversalTime() : DateTime.UtcNow,
+                    PhoneNumber = request.Phone,
+                    Role = "обучающийся",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    IsActive = true
+                };
+
+                Console.WriteLine("Создание нового пользователя...");
+
+                // Хеширование пароля
+                using var hmac = new HMACSHA512();
+                var passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(request.Password));
+                user.PasswordHash = Convert.ToBase64String(passwordHash);
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+
+                Console.WriteLine($"Пользователь успешно создан с ID: {user.Id}");
+
+                var token = GenerateJwtToken(user);
+                return Ok(new { token, user });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка при создании пользователя: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                return StatusCode(500, "Внутренняя ошибка сервера");
             }
         }
 
@@ -203,73 +269,92 @@ namespace backend.Controllers
 
         private string GenerateJwtToken(User user)
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_configuration["JwtSettings:Secret"]);
-            
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(JwtRegisteredClaimNames.GivenName, user.Name),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}")
             };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:Secret"]));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddMinutes(Convert.ToInt32(_configuration["JwtSettings:ExpirationInMinutes"])),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
+                Expires = DateTime.Now.AddDays(7),
+                SigningCredentials = creds,
                 Issuer = _configuration["JwtSettings:Issuer"],
                 Audience = _configuration["JwtSettings:Audience"]
             };
 
+            var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
+        }
+
+        private string HashPassword(string password)
+        {
+            using (var sha256 = SHA256.Create())
+            {
+                var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+                return Convert.ToBase64String(hashedBytes);
+            }
         }
     }
 
     public class GoogleTokenResponse
     {
         [JsonPropertyName("access_token")]
-        public string AccessToken { get; set; }
+        public string AccessToken { get; set; } = string.Empty;
         
         [JsonPropertyName("expires_in")]
         public int ExpiresIn { get; set; }
         
         [JsonPropertyName("token_type")]
-        public string TokenType { get; set; }
+        public string TokenType { get; set; } = string.Empty;
         
         [JsonPropertyName("refresh_token")]
-        public string RefreshToken { get; set; }
+        public string RefreshToken { get; set; } = string.Empty;
         
         [JsonPropertyName("id_token")]
-        public string IdToken { get; set; }
+        public string IdToken { get; set; } = string.Empty;
     }
 
     public class GoogleUserInfo
     {
         [JsonPropertyName("id")]
-        public string Id { get; set; }
+        public string Id { get; set; } = string.Empty;
         
         [JsonPropertyName("email")]
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
         
         [JsonPropertyName("verified_email")]
         public bool VerifiedEmail { get; set; }
         
         [JsonPropertyName("name")]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         
         [JsonPropertyName("given_name")]
-        public string GivenName { get; set; }
+        public string GivenName { get; set; } = string.Empty;
         
         [JsonPropertyName("family_name")]
-        public string FamilyName { get; set; }
+        public string FamilyName { get; set; } = string.Empty;
         
         [JsonPropertyName("picture")]
-        public string Picture { get; set; }
+        public string Picture { get; set; } = string.Empty;
         
         [JsonPropertyName("locale")]
-        public string Locale { get; set; }
+        public string Locale { get; set; } = string.Empty;
+    }
+
+    public class RegisterRequest
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string? DateOfBirth { get; set; }
+        public string? Phone { get; set; }
     }
 } 

@@ -1,13 +1,14 @@
 import { ApplicationConfig, inject } from '@angular/core';
-import { provideRouter } from '@angular/router';
-import { provideHttpClient, withInterceptors, HttpClientModule } from '@angular/common/http';
+import { provideRouter, withViewTransitions } from '@angular/router';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { AuthService } from './services/auth.service';
+import { RegisterStep2Component } from './auth/register/register-step2/register-step2.component';
 
 import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideRouter(routes),
+    provideRouter(routes, withViewTransitions()),
     provideHttpClient(withInterceptors([
       (req, next) => {
         try {

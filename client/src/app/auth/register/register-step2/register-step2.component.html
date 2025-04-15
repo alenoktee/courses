@@ -1,0 +1,94 @@
+<div class="register-container">
+  <div class="register-card">
+    <div class="register-header">
+      <h1>Завершение регистрации</h1>
+      <p class="subtitle">Пожалуйста, заполните дополнительные данные</p>
+    </div>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="firstName">Имя</label>
+        <div class="input-field">
+          <span class="input-icon">
+            <i class="fas fa-user"></i>
+          </span>
+          <input
+            type="text"
+            id="firstName"
+            formControlName="firstName"
+            placeholder="Введите ваше имя"
+          >
+        </div>
+        <div class="error-message" *ngIf="firstName?.invalid && (firstName?.dirty || firstName?.touched)">
+          <div *ngIf="firstName?.errors?.['required']">Имя обязательно для заполнения</div>
+          <div *ngIf="firstName?.errors?.['minlength']">Имя должно содержать минимум 2 символа</div>
+          <div *ngIf="firstName?.errors?.['maxlength']">Имя не должно превышать 50 символов</div>
+          <div *ngIf="firstName?.errors?.['pattern']">Имя может содержать только буквы и дефис</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="lastName">Фамилия</label>
+        <div class="input-field">
+          <span class="input-icon">
+            <i class="fas fa-user"></i>
+          </span>
+          <input
+            type="text"
+            id="lastName"
+            formControlName="lastName"
+            placeholder="Введите вашу фамилию"
+          >
+        </div>
+        <div class="error-message" *ngIf="lastName?.invalid && (lastName?.dirty || lastName?.touched)">
+          <div *ngIf="lastName?.errors?.['required']">Фамилия обязательна для заполнения</div>
+          <div *ngIf="lastName?.errors?.['minlength']">Фамилия должна содержать минимум 2 символа</div>
+          <div *ngIf="lastName?.errors?.['maxlength']">Фамилия не должна превышать 50 символов</div>
+          <div *ngIf="lastName?.errors?.['pattern']">Фамилия может содержать только буквы и дефис</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="dateOfBirth">Дата рождения</label>
+        <div class="input-field">
+          <span class="input-icon">
+            <i class="fas fa-calendar"></i>
+          </span>
+          <input
+            type="date"
+            id="dateOfBirth"
+            formControlName="dateOfBirth"
+          >
+        </div>
+        <div class="error-message" *ngIf="dateOfBirth?.invalid && (dateOfBirth?.dirty || dateOfBirth?.touched)">
+          <div *ngIf="dateOfBirth?.errors?.['required']">Дата рождения обязательна для заполнения</div>
+          <div *ngIf="dateOfBirth?.errors?.['age']">Возраст должен быть от 18 до 100 лет</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="phoneNumber">Номер телефона</label>
+        <div class="input-field">
+          <span class="input-icon">
+            <i class="fas fa-phone"></i>
+          </span>
+          <input
+            type="tel"
+            id="phoneNumber"
+            formControlName="phoneNumber"
+            placeholder="+7 (XXX) XXX-XX-XX"
+          >
+        </div>
+        <div class="error-message" *ngIf="phoneNumber?.invalid && (phoneNumber?.dirty || phoneNumber?.touched)">
+          <div *ngIf="phoneNumber?.errors?.['required']">Номер телефона обязателен для заполнения</div>
+          <div *ngIf="phoneNumber?.errors?.['pattern']">Введите корректный номер телефона</div>
+        </div>
+      </div>
+
+      <button type="submit" [disabled]="registerForm.invalid">
+        <i class="fas fa-check"></i>
+        Завершить регистрацию
+      </button>
+    </form>
+  </div>
+</div> 
