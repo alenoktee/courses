@@ -1,20 +1,4 @@
 // Глобальные стили для шрифта Unbounded
 html, body {
-  font-family: 'Unbounded', sans-serif !important;
+  font-family: 'Unbounded', sans-serif;
 }
-
-// Переопределение для элементов, где нужен другой шрифт
-input, textarea, select, button {
-  font-family: 'Roboto', sans-serif !important;
-}
-
-// Стили для заголовков
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Unbounded', sans-serif !important;
-  font-weight: 600;
-}
-
-// Стили для текста
-p, span, div, a {
-  font-family: 'Unbounded', sans-serif !important;
-} 

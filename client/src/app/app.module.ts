@@ -9,10 +9,10 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { AppComponent } from './app.component';
-import { AppRoutingModule } from './app.routes';
-import { LoginComponent } from './auth/login/login.component';
-import { RegisterComponent } from './auth/register/register.component';
-import { AuthService } from './auth/services/auth.service';
+import { routes } from './app.routes';
+import { LoginComponent } from './pages/login/login.component';
+import { RegisterComponent } from './pages/register/register.component';
+import { AuthService } from './services/auth.service';
 
 @NgModule({
   declarations: [
@@ -29,7 +29,7 @@ import { AuthService } from './auth/services/auth.service';
     MatButtonModule,
     MatInputModule,
     MatFormFieldModule,
-    AppRoutingModule
+    routes
   ],
   providers: [AuthService],
   bootstrap: [AppComponent]

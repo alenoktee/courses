@@ -23,6 +23,7 @@ export class AuthService {
   private readonly API_URL = 'http://localhost:5198/api';
   private tokenKey = 'auth_token';
   private userKey = 'auth_user';
+  private registrationData: any = null;
   
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
@@ -35,6 +36,14 @@ export class AuthService {
     private router: Router
   ) {
     this.loadStoredAuth();
+  }
+
+  setRegistrationData(data: any) {
+    this.registrationData = data;
+  }
+
+  getRegistrationData() {
+    return this.registrationData;
   }
 
   private loadStoredAuth(): void {

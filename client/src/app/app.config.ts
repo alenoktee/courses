@@ -2,7 +2,7 @@ import { ApplicationConfig, inject } from '@angular/core';
 import { provideRouter, withViewTransitions } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { AuthService } from './services/auth.service';
-import { RegisterStep2Component } from './auth/register/register-step2/register-step2.component';
+import { RegisterStep2Component } from './pages/register/register-step2/register-step2.component';
 
 import { routes } from './app.routes';
 

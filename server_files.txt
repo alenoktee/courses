@@ -1,0 +1,787 @@
+Controllers/:
+    AuthController.cs:
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using System;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Net.Http;
+using System.Security.Claims;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+using backend.Data;
+using backend.Models;
+using System.Linq;
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Identity;
+using System.Security.Cryptography;
+using Microsoft.EntityFrameworkCore;
+
+namespace backend.Controllers
+{
+    [ApiController]
+    [Route("api/auth")]
+    public class AuthController : ControllerBase
+    {
+        private readonly IConfiguration _configuration;
+        private readonly AppDbContext _context;
+        private readonly IHttpClientFactory _httpClientFactory;
+
+        public AuthController(
+            IConfiguration configuration,
+            AppDbContext context,
+            IHttpClientFactory httpClientFactory)
+        {
+            _configuration = configuration;
+            _context = context;
+            _httpClientFactory = httpClientFactory;
+        }
+
+        [HttpPost("google")]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleAuthRequest request)
+        {
+            Console.WriteLine($"Получен запрос на авторизацию через Google. Code: {request.Code?.Substring(0, 10)}..., RedirectUri: {request.RedirectUri}");
+            
+            try
+            {
+                var tokenResponse = await ExchangeCodeForTokenAsync(request.Code, request.RedirectUri);
+                if (tokenResponse == null)
+                {
+                    Console.WriteLine("Не удалось получить токен от Google");
+                    return BadRequest("Не удалось обменять код на токен");
+                }
+
+                Console.WriteLine($"Получен токен доступа: {tokenResponse.AccessToken?.Substring(0, 15)}...");
+
+                var userInfo = await GetGoogleUserInfoAsync(tokenResponse.AccessToken);
+                if (userInfo == null)
+                {
+                    Console.WriteLine("Не удалось получить информацию о пользователе от Google");
+                    return BadRequest("Не удалось получить информацию о пользователе");
+                }
+
+                Console.WriteLine($"Получена информация о пользователе:");
+                Console.WriteLine($"ID: {userInfo.Id}");
+                Console.WriteLine($"Email: {userInfo.Email}");
+                Console.WriteLine($"Name: {userInfo.Name}");
+                Console.WriteLine($"GivenName: {userInfo.GivenName}");
+                Console.WriteLine($"FamilyName: {userInfo.FamilyName}");
+                Console.WriteLine($"Picture: {userInfo.Picture?.Substring(0, 30)}...");
+
+                string firstName = !string.IsNullOrEmpty(userInfo.GivenName) ? userInfo.GivenName :
+                                  !string.IsNullOrEmpty(userInfo.Name) ? userInfo.Name.Split(' ')[0] :
+                                  !string.IsNullOrEmpty(userInfo.Email) ? userInfo.Email.Split('@')[0] :
+                                  "Google";
+
+                string lastName = !string.IsNullOrEmpty(userInfo.FamilyName) ? userInfo.FamilyName :
+                                 !string.IsNullOrEmpty(userInfo.Name) && userInfo.Name.Split(' ').Length > 1 ? userInfo.Name.Split(' ')[1] :
+                                 "User";
+
+                var user = _context.Users.FirstOrDefault(u => u.GoogleId == userInfo.Id);
+                
+                if (user == null)
+                {
+                    user = new User
+                    {
+                        GoogleId = userInfo.Id ?? "unknown",
+                        FirstName = firstName,
+                        LastName = lastName,
+                        Email = userInfo.Email ?? "noemail@example.com",
+                        ProfilePictureUrl = userInfo.Picture,
+                        Role = "обучающийся"
+                    };
+                    
+                    Console.WriteLine($"Создаем нового пользователя: GoogleId={user.GoogleId}, FirstName={user.FirstName}, LastName={user.LastName}, Email={user.Email}");
+                    
+                    _context.Users.Add(user);
+                    await _context.SaveChangesAsync();
+                    
+                    Console.WriteLine("Пользователь успешно создан в базе данных");
+                }
+                else
+                {
+                    Console.WriteLine($"Обновляем существующего пользователя с ID={user.Id}");
+                    
+                    user.FirstName = firstName;
+                    user.LastName = lastName;
+                    user.Email = userInfo.Email ?? user.Email;
+                    user.ProfilePictureUrl = userInfo.Picture ?? user.ProfilePictureUrl;
+                    
+                    await _context.SaveChangesAsync();
+                    
+                    Console.WriteLine("Пользователь успешно обновлен в базе данных");
+                }
+
+                var token = GenerateJwtToken(user);
+                Console.WriteLine($"JWT токен успешно сгенерирован: {token.Substring(0, 20)}...");
+
+                return Ok(new AuthResponse { Token = token, User = user });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка при обработке запроса: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Внутреннее исключение: {ex.InnerException.Message}");
+                }
+                return StatusCode(500, $"Внутренняя ошибка сервера: {ex.Message}");
+            }
+        }
+
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+        {
+            Console.WriteLine($"Получен запрос на регистрацию: Email={request.Email}, FirstName={request.FirstName}, LastName={request.LastName}");
+
+            if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
+            {
+                Console.WriteLine("Ошибка: Email или пароль пустые");
+                return BadRequest("Email и пароль обязательны");
+            }
+
+            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+            if (existingUser != null)
+            {
+                Console.WriteLine($"Ошибка: пользователь с email {request.Email} уже существует");
+                return BadRequest("Пользователь с таким email уже существует");
+            }
+
+            try
+            {
+                var user = new User
+                {
+                    Email = request.Email,
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
+                    BirthDate = request.DateOfBirth != null ? DateTime.Parse(request.DateOfBirth).ToUniversalTime() : DateTime.UtcNow,
+                    PhoneNumber = request.Phone,
+                    Role = "обучающийся",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    IsActive = true
+                };
+
+                Console.WriteLine("Создание нового пользователя...");
+
+                // Хеширование пароля
+                using var hmac = new HMACSHA512();
+                var passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(request.Password));
+                user.PasswordHash = Convert.ToBase64String(passwordHash);
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+
+                Console.WriteLine($"Пользователь успешно создан с ID: {user.Id}");
+
+                var token = GenerateJwtToken(user);
+                return Ok(new { token, user });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка при создании пользователя: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                return StatusCode(500, "Внутренняя ошибка сервера");
+            }
+        }
+
+        private async Task<GoogleTokenResponse> ExchangeCodeForTokenAsync(string code, string redirectUri)
+        {
+            try
+            {
+                var clientId = _configuration["Authentication:Google:ClientId"];
+                var clientSecret = _configuration["Authentication:Google:ClientSecret"];
+
+                Console.WriteLine($"Отправка запроса на получение токена. ClientId: {clientId?.Substring(0, 10)}..., RedirectUri: {redirectUri}");
+
+                var client = _httpClientFactory.CreateClient();
+                var tokenRequestContent = new FormUrlEncodedContent(new Dictionary<string, string>
+                {
+                    { "code", code },
+                    { "client_id", clientId },
+                    { "client_secret", clientSecret },
+                    { "redirect_uri", redirectUri },
+                    { "grant_type", "authorization_code" }
+                });
+
+                var response = await client.PostAsync("https://oauth2.googleapis.com/token", tokenRequestContent);
+                var responseContent = await response.Content.ReadAsStringAsync();
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"Ошибка при обмене кода на токен. Статус: {response.StatusCode}");
+                    Console.WriteLine($"Ответ: {responseContent}");
+                    return null;
+                }
+
+                Console.WriteLine($"Google Token Response: {responseContent}");
+                
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+                
+                var result = JsonSerializer.Deserialize<GoogleTokenResponse>(responseContent, options);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Исключение при обмене кода на токен: {ex.Message}");
+                return null;
+            }
+        }
+
+        private async Task<GoogleUserInfo> GetGoogleUserInfoAsync(string accessToken)
+        {
+            try
+            {
+                Console.WriteLine("Отправка запроса на получение информации о пользователе");
+                
+                var client = _httpClientFactory.CreateClient();
+                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+
+                var response = await client.GetAsync("https://www.googleapis.com/oauth2/v2/userinfo");
+                var responseContent = await response.Content.ReadAsStringAsync();
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"Ошибка при получении информации о пользователе. Статус: {response.StatusCode}");
+                    Console.WriteLine($"Ответ: {responseContent}");
+                    return null;
+                }
+
+                Console.WriteLine($"Google UserInfo Response: {responseContent}");
+
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+                
+                var result = JsonSerializer.Deserialize<GoogleUserInfo>(responseContent, options);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Исключение при получении информации о пользователе: {ex.Message}");
+                return null;
+            }
+        }
+
+        private string GenerateJwtToken(User user)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}")
+            };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:Secret"]));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.Now.AddDays(7),
+                SigningCredentials = creds,
+                Issuer = _configuration["JwtSettings:Issuer"],
+                Audience = _configuration["JwtSettings:Audience"]
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
+
+        private string HashPassword(string password)
+        {
+            using (var sha256 = SHA256.Create())
+            {
+                var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+                return Convert.ToBase64String(hashedBytes);
+            }
+        }
+    }
+
+    public class GoogleTokenResponse
+    {
+        [JsonPropertyName("access_token")]
+        public string AccessToken { get; set; } = string.Empty;
+        
+        [JsonPropertyName("expires_in")]
+        public int ExpiresIn { get; set; }
+        
+        [JsonPropertyName("token_type")]
+        public string TokenType { get; set; } = string.Empty;
+        
+        [JsonPropertyName("refresh_token")]
+        public string RefreshToken { get; set; } = string.Empty;
+        
+        [JsonPropertyName("id_token")]
+        public string IdToken { get; set; } = string.Empty;
+    }
+
+    public class GoogleUserInfo
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set; } = string.Empty;
+        
+        [JsonPropertyName("email")]
+        public string Email { get; set; } = string.Empty;
+        
+        [JsonPropertyName("verified_email")]
+        public bool VerifiedEmail { get; set; }
+        
+        [JsonPropertyName("name")]
+        public string Name { get; set; } = string.Empty;
+        
+        [JsonPropertyName("given_name")]
+        public string GivenName { get; set; } = string.Empty;
+        
+        [JsonPropertyName("family_name")]
+        public string FamilyName { get; set; } = string.Empty;
+        
+        [JsonPropertyName("picture")]
+        public string Picture { get; set; } = string.Empty;
+        
+        [JsonPropertyName("locale")]
+        public string Locale { get; set; } = string.Empty;
+    }
+
+    public class RegisterRequest
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string? DateOfBirth { get; set; }
+        public string? Phone { get; set; }
+    }
+} 
+
+
+    UserController.cs:
+using Microsoft.AspNetCore.Mvc;
+using backend.Data;
+using backend.Models;
+
+[ApiController]
+[Route("api/[controller]")]
+public class UserController : ControllerBase
+{
+    private readonly AppDbContext _context;
+
+    public UserController(AppDbContext context)
+    {
+        _context = context;
+    }
+
+    [HttpGet]
+    public IActionResult GetUsers()
+    {
+        return Ok(_context.Users.ToList());
+    }
+
+    [HttpGet("test")]
+    public IActionResult TestConnection()
+    {
+        return Ok(new { message = "Работает!" });
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetUser(int id)
+    {
+        var user = await _context.Users.FindAsync(id);
+
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(user);
+    }
+
+    [HttpPost]
+    public IActionResult AddUser(User user)
+    {
+        _context.Users.Add(user);
+        _context.SaveChanges();
+        return Ok(user);
+    }
+}
+
+
+
+
+
+Data/: AppDbContext.cs:
+using backend.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace backend.Data
+{
+    public class AppDbContext : DbContext
+    {
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+
+        public DbSet<User> Users { get; set; }
+        public DbSet<Teacher> Teachers { get; set; }
+        public DbSet<Group> Groups { get; set; }
+        public DbSet<GroupTeacher> GroupTeachers { get; set; }
+        public DbSet<GroupStudent> GroupStudents { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // Настройка индексов
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Email)
+                .IsUnique();
+
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.PhoneNumber)
+                .IsUnique();
+
+            modelBuilder.Entity<Group>()
+                .HasIndex(g => g.Code)
+                .IsUnique();
+
+            // Настройка связей
+            modelBuilder.Entity<Teacher>()
+                .HasOne(t => t.User)
+                .WithMany()
+                .HasForeignKey(t => t.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Group>()
+                .HasOne(g => g.Creator)
+                .WithMany()
+                .HasForeignKey(g => g.CreatorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<GroupTeacher>()
+                .HasOne(gt => gt.Group)
+                .WithMany()
+                .HasForeignKey(gt => gt.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<GroupTeacher>()
+                .HasOne(gt => gt.Teacher)
+                .WithMany()
+                .HasForeignKey(gt => gt.TeacherId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<GroupStudent>()
+                .HasOne(gs => gs.Group)
+                .WithMany()
+                .HasForeignKey(gs => gs.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<GroupStudent>()
+                .HasOne(gs => gs.Student)
+                .WithMany()
+                .HasForeignKey(gs => gs.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+        }
+    }
+}
+
+
+
+Migrations/: думаю, что не важно
+
+Models/:
+    AuthModels.cs:
+namespace backend.Models
+{
+    public class GoogleAuthRequest
+    {
+        public string Code { get; set; } = string.Empty;
+        public string RedirectUri { get; set; } = string.Empty;
+    }
+
+    public class AuthResponse
+    {
+        public string Token { get; set; } = string.Empty;
+        public User User { get; set; } = null!;
+    }
+
+    public class JwtSettings
+    {
+        public string Secret { get; set; } = string.Empty;
+        public string Issuer { get; set; } = string.Empty;
+        public string Audience { get; set; } = string.Empty;
+        public int ExpirationInMinutes { get; set; }
+    }
+} 
+
+
+    Group.cs:
+namespace backend.Models
+{
+    public class Group
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Code { get; set; } = string.Empty;
+        public int CreatorId { get; set; }
+        public User Creator { get; set; } = null!;
+        public string? Description { get; set; }
+        public bool IsActive { get; set; } = true;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    }
+} 
+
+
+    GroupStudent.cs:
+    namespace backend.Models
+{
+    public class GroupStudent
+    {
+        public int Id { get; set; }
+        public int GroupId { get; set; }
+        public Group Group { get; set; } = null!;
+        public int StudentId { get; set; }
+        public User Student { get; set; } = null!;
+        public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
+        public bool IsActive { get; set; } = true;
+    }
+} 
+
+
+    GroupTeacher.cs:
+namespace backend.Models
+{
+    public class GroupTeacher
+    {
+        public int Id { get; set; }
+        public int GroupId { get; set; }
+        public Group Group { get; set; } = null!;
+        public int TeacherId { get; set; }
+        public Teacher Teacher { get; set; } = null!;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
+} 
+
+
+    RegisterRequest.cs:
+namespace backend.Models
+{
+    public class RegisterRequest
+    {
+        public string Email { get; set; }
+        public string Password { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string DateOfBirth { get; set; }
+        public string Phone { get; set; }
+    }
+} 
+
+
+    Teacher.cs:
+    namespace backend.Models
+{
+    public class Teacher
+    {
+        public int Id { get; set; }
+        public int UserId { get; set; }
+        public User User { get; set; } = null!;
+        public int ExperienceYears { get; set; }
+        public string? Bio { get; set; }
+        public string? Specialization { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    }
+} 
+
+
+    User.cs:
+    namespace backend.Models
+{
+    public class User
+    {
+        public int Id { get; set; }
+        public string Email { get; set; } = string.Empty;
+        public string? PhoneNumber { get; set; }
+        public string? PasswordHash { get; set; }
+        public string LastName { get; set; } = string.Empty;
+        public string FirstName { get; set; } = string.Empty;
+        public string? Patronymic { get; set; }
+        public DateTime BirthDate { get; set; }
+        public string Role { get; set; } = "обучающийся";
+        public string? ProfilePictureUrl { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? LastLoginAt { get; set; }
+        public bool IsActive { get; set; } = true;
+        public string? GoogleId { get; set; }
+    }
+}
+
+
+
+Properties/: launchSettings.json:
+{
+  "$schema": "http://json.schemastore.org/launchsettings.json",
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:17328",
+      "sslPort": 44394
+    }
+  },
+  "profiles": {
+    "http": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "launchUrl": "swagger",
+      "applicationUrl": "http://localhost:5198",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "https": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "launchUrl": "swagger",
+      "applicationUrl": "https://localhost:7186;http://localhost:5198",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "IIS Express": {
+      "commandName": "IISExpress",
+      "launchBrowser": true,
+      "launchUrl": "swagger",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
+
+
+Файлы в корне:
+    appsettings.Development.json:
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  }
+}
+
+
+
+    appsettings.json:
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=postgres"
+  },
+  "JwtSettings": {
+    "Secret": "73792136458297345189273458297345",
+    "Issuer": "courses",
+    "Audience": "students",
+    "ExpirationInMinutes": 60
+  },
+  "Authentication": {
+    "Google": {
+      "ClientId": "196351865869-kq6bbtfs5f9agrfk192kiff6kgnnvunb.apps.googleusercontent.com",
+      "ClientSecret": "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"
+    }
+  },
+  "AllowedHosts": "*"
+}
+
+
+
+    backend.http: ничего важного
+    Program.cs:
+using backend.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngularDev", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
+builder.Services.AddHttpClient();
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(builder.Configuration["JwtSettings:Secret"])),
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+        ValidAudience = builder.Configuration["JwtSettings:Audience"],
+        ClockSkew = TimeSpan.Zero
+    };
+});
+
+builder.Services.AddControllers();
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+var app = builder.Build();
+
+app.Urls.Add("http://localhost:5198");
+
+app.UseCors("AllowAngularDev");
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseRouting();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();
+
+    server.csproj:
+    server.sln: 

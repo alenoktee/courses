@@ -1,0 +1,2055 @@
+Директории:
+src/:
+    index.html:
+        <!doctype html>
+        <html lang="en">
+        <head>
+        <meta charset="utf-8">
+        <title>Client</title>
+        <base href="/">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="icon" type="image/x-icon" href="favicon.ico">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Unbounded:wght@200..900&display=swap" rel="stylesheet">
+        </head>
+        <body>
+        <app-root></app-root>
+        </body>
+        </html>
+
+    main.ts:
+        import { bootstrapApplication } from '@angular/platform-browser';
+        import { appConfig } from './app/app.config';
+        import { AppComponent } from './app/app.component';
+
+        bootstrapApplication(AppComponent, appConfig)
+        .catch((err) => console.error(err));
+
+    styles.css:
+        .wrapper {
+            width: 420px;
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, .2);
+            backdrop-filter: blur(30px);
+            color: #fff;
+            border-radius: 10px;
+            padding: 30px 40px;
+        }
+
+        .wrapper h1 {
+            font-size: 36px;
+            text-align: center;
+        }
+
+        .wrapper .input-box {
+            position: relative;
+            width: 100%;
+            height: 50px;
+            margin: 30px 0;
+        }
+
+        .input-box input {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, .2);
+            outline: none;
+            border-radius: 40px;
+            font-size: 16px;
+            color: #fff;
+            padding: 20px 45px 20px 20px;
+        }
+
+        .input-box input::placeholder {
+            color: #fff;
+        }
+
+        .input-box .icon {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 16px;
+        }
+
+        .wrapper .remember-forgot {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14.5px;
+            margin: -15px 0 15px
+        }
+
+        .remember-forgot label input {
+            accent-color: #fff;
+            margin-right: 4px;
+        }
+
+        .remember-forgot a {
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .remember-forgot a:hover {
+            text-decoration: underline;
+        }
+
+        .wrapper button {
+            width: 100%;
+            height: 45px;
+            background: #fff;
+            border: none;
+            outline: none;
+            border-radius: 40px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, .1);
+            cursor: pointer;
+            font-size: 16px;
+            color: #333;
+            font-weight: 700;
+        }
+
+        .wrapper .register-link {
+            font-size: 14.5px;
+            text-align: center;
+            margin: 20px 0 15px;
+        }
+
+        .register-link p a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .register-link p a:hover {
+            text-decoration: underline;
+        }
+
+    styles.scss:
+        @import '@angular/material/prebuilt-themes/indigo-pink.css';
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+        * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Poppins", sans-serif !important;
+        font-weight: 400;
+        }
+
+        html, body {
+        height: 100%;
+        margin: 0;
+        font-family: "Poppins", sans-serif;
+        font-weight: 400;
+        }
+
+        body {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        }
+
+        h1, h2, h3, h4, h5, h6, p, span, div {
+        font-family: "Poppins", sans-serif;
+        font-weight: 400;
+        }
+
+        a, button {
+        font-family: "Poppins", sans-serif;
+        font-weight: 300;
+        }
+
+        .mat-mdc-form-field {
+        width: 100%;
+        }
+
+src/app/:
+    app.module.ts:
+        import { NgModule } from '@angular/core';
+        import { BrowserModule } from '@angular/platform-browser';
+        import { HttpClientModule } from '@angular/common/http';
+        import { ReactiveFormsModule } from '@angular/forms';
+        import { MatIconModule } from '@angular/material/icon';
+        import { MatButtonModule } from '@angular/material/button';
+        import { MatInputModule } from '@angular/material/input';
+        import { MatFormFieldModule } from '@angular/material/form-field';
+        import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+
+        import { AppComponent } from './app.component';
+        import { AppRoutingModule } from './app.routes';
+        import { LoginComponent } from './pages/login/login.component';
+        import { RegisterComponent } from './pages/register/register.component';
+        import { AuthService } from './services/auth.service';
+
+        @NgModule({
+        declarations: [
+            AppComponent,
+            LoginComponent,
+            RegisterComponent
+        ],
+        imports: [
+            BrowserModule,
+            BrowserAnimationsModule,
+            HttpClientModule,
+            ReactiveFormsModule,
+            MatIconModule,
+            MatButtonModule,
+            MatInputModule,
+            MatFormFieldModule,
+            AppRoutingModule
+        ],
+        providers: [AuthService],
+        bootstrap: [AppComponent]
+        })
+        export class AppModule { } 
+
+    app.config.ts:
+        import { ApplicationConfig, inject } from '@angular/core';
+        import { provideRouter, withViewTransitions } from '@angular/router';
+        import { provideHttpClient, withInterceptors } from '@angular/common/http';
+        import { AuthService } from './services/auth.service';
+        import { RegisterStep2Component } from './pages/register/register-step2/register-step2.component';
+
+        import { routes } from './app.routes';
+
+        export const appConfig: ApplicationConfig = {
+        providers: [
+            provideRouter(routes, withViewTransitions()),
+            provideHttpClient(withInterceptors([
+            (req, next) => {
+                try {
+                const authService = inject(AuthService);
+                const token = authService.getToken();
+                if (token) {
+                    const authReq = req.clone({
+                    setHeaders: {
+                        Authorization: `Bearer ${token}`
+                    }
+                    });
+                    return next(authReq);
+                }
+                } catch (e) {
+                }
+                return next(req);
+            }
+            ]))
+        ]
+        };
+
+    app.routes.ts:
+        import { Routes } from '@angular/router';
+        import { LoginComponent } from './pages/login/login.component';
+        import { RegisterComponent } from './pages/register/register.component';
+        import { RegisterStep2Component } from './pages/register/register-step2/register-step2.component';
+        import { AuthCallbackComponent } from './components/auth-callback/auth-callback.component';
+
+        export const routes: Routes = [
+        { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
+        { path: 'auth/login', component: LoginComponent },
+        { path: 'auth/register', component: RegisterComponent },
+        { path: 'auth/register/step2', component: RegisterStep2Component },
+        { path: 'auth-callback', component: AuthCallbackComponent }
+        ];
+
+    app.component.ts:
+        import { Component } from '@angular/core';
+        import { CommonModule } from '@angular/common';
+        import { RouterModule } from '@angular/router';
+        import { AuthService } from './pages/auth/services/auth.service';
+
+        @Component({
+        selector: 'app-root',
+        standalone: true,
+        imports: [CommonModule, RouterModule],
+        template: `
+            <router-outlet></router-outlet>
+        `,
+        styles: [`
+            :host {
+            display: block;
+            height: 100%;
+            }
+        `]
+        })
+        export class AppComponent {
+        title = 'client';
+        isLoggedIn = false;
+
+        constructor(private authService: AuthService) {}
+
+        ngOnInit() {
+            this.authService.currentUser.subscribe(user => {
+            this.isLoggedIn = !!user;
+            });
+        }
+
+        logout() {
+            this.authService.logout();
+        }
+        }
+
+    app.component.css:
+        пустой
+
+    app.component.html:
+        <header>
+        <nav *ngIf="isLoggedIn">
+            <button (click)="logout()">Выход</button>
+        </nav>
+        </header>
+
+        <main>
+        <router-outlet></router-outlet>
+        </main>
+
+    app.component.spec.ts:
+        import { TestBed } from '@angular/core/testing';
+        import { AppComponent } from './app.component';
+
+        describe('AppComponent', () => {
+        beforeEach(async () => {
+            await TestBed.configureTestingModule({
+            imports: [AppComponent],
+            }).compileComponents();
+        });
+
+        it('should create the app', () => {
+            const fixture = TestBed.createComponent(AppComponent);
+            const app = fixture.componentInstance;
+            expect(app).toBeTruthy();
+        });
+
+        it(`should have the 'client' title`, () => {
+            const fixture = TestBed.createComponent(AppComponent);
+            const app = fixture.componentInstance;
+            expect(app.title).toEqual('client');
+        });
+
+        it('should render title', () => {
+            const fixture = TestBed.createComponent(AppComponent);
+            fixture.detectChanges();
+            const compiled = fixture.nativeElement as HTMLElement;
+            expect(compiled.querySelector('h1')?.textContent).toContain('Hello, client');
+        });
+        });
+
+src/app/pages/:
+    register/:
+        register.component.spec.ts:
+            import { ComponentFixture, TestBed } from '@angular/core/testing';
+            import { RegisterComponent } from './register.component';
+
+            describe('RegisterComponent', () => {
+            let component: RegisterComponent;
+            let fixture: ComponentFixture<RegisterComponent>;
+
+            beforeEach(async () => {
+                await TestBed.configureTestingModule({
+                imports: [RegisterComponent]
+                })
+                .compileComponents();
+
+                fixture = TestBed.createComponent(RegisterComponent);
+                component = fixture.componentInstance;
+                fixture.detectChanges();
+            });
+
+            it('should create', () => {
+                expect(component).toBeTruthy();
+            });
+            });
+
+
+        register.component.css:
+            пустой
+
+        register.component.html:
+            <div class="register-container">
+            <div class="register-card">
+                <div class="register-header">
+                <h1>Регистрация</h1>
+                </div>
+
+                <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <div class="input-field">
+                    <span class="input-icon email-icon"></span>
+                    <input
+                        type="email"
+                        id="email"
+                        formControlName="email"
+                        placeholder="Введите email"
+                        maxlength="100"
+                        required
+                    />
+                    </div>
+                    <div *ngIf="email?.invalid && email?.touched" class="error-message">
+                    <div *ngIf="email?.errors?.['required']">Email обязателен</div>
+                    <div *ngIf="email?.errors?.['email']">Введите корректный email</div>
+                    <div *ngIf="email?.errors?.['maxlength']">Email не должен превышать 100 символов</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <div class="input-field">
+                    <span class="input-icon lock-icon"></span>
+                    <input
+                        [type]="showPassword ? 'text' : 'password'"
+                        id="password"
+                        formControlName="password"
+                        placeholder="Введите пароль"
+                        maxlength="50"
+                        required
+                    />
+                    <span
+                        class="password-toggle"
+                        (click)="togglePasswordVisibility('password')"
+                    >
+                        <span class="eye-icon" [class.closed]="showPassword"></span>
+                    </span>
+                    </div>
+                    <div *ngIf="password?.invalid && password?.touched" class="error-message">
+                    <div *ngIf="password?.errors?.['required']">Пароль обязателен</div>
+                    <div *ngIf="password?.errors?.['minlength']">Пароль должен содержать минимум 8 символов</div>
+                    <div *ngIf="password?.errors?.['maxlength']">Пароль не должен превышать 50 символов</div>
+                    <div *ngIf="password?.errors?.['pattern']">
+                        Пароль должен содержать:
+                        <ul>
+                        <li>Минимум одну заглавную букву</li>
+                        <li>Минимум одну строчную букву</li>
+                        <li>Минимум одну цифру</li>
+                        <li>Минимум один специальный символ (&#64;$!%*?&)</li>
+                        </ul>
+                    </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Подтверждение пароля</label>
+                    <div class="input-field">
+                    <span class="input-icon lock-icon"></span>
+                    <input
+                        [type]="showConfirmPassword ? 'text' : 'password'"
+                        id="confirmPassword"
+                        formControlName="confirmPassword"
+                        placeholder="Подтвердите пароль"
+                        maxlength="50"
+                        required
+                    />
+                    <span
+                        class="password-toggle"
+                        (click)="togglePasswordVisibility('confirmPassword')"
+                    >
+                        <span class="eye-icon" [class.closed]="showConfirmPassword"></span>
+                    </span>
+                    </div>
+                    <div *ngIf="confirmPassword?.invalid && confirmPassword?.touched" class="error-message">
+                    <div *ngIf="confirmPassword?.errors?.['required']">Подтверждение пароля обязательно</div>
+                    <div *ngIf="registerForm.errors?.['mismatch']">Пароли не совпадают</div>
+                    </div>
+                </div>
+
+                <div *ngIf="errorMessage" class="error-message">
+                    {{ errorMessage }}
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                    [disabled]="!registerForm.valid"
+                >
+                    Продолжить
+                </button>
+
+                <div class="divider">
+                    <span>или</span>
+                </div>
+
+                <button type="button" class="btn btn-primary google-button" (click)="googleLogin()">
+                    <div class="google-icon"></div>
+                    Зарегистрироваться через Google
+                </button>
+                </form>
+
+                <div class="auth-footer">
+                <p>Уже есть аккаунт? <a routerLink="/auth/login">Войти</a></p>
+                </div>
+            </div>
+            </div>
+
+        register.component.scss:
+            @use '@angular/material' as mat;
+            @use '../../../styles/variables' as *;
+
+            :host {
+            display: block;
+            width: 100%;
+            height: 100%;
+            }
+
+            .register-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: url('../../../assets/images/auth-bg.jpg') no-repeat center center;
+            background-size: cover;
+            padding: 20px;
+            position: relative;
+            }
+
+            .register-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(8px);
+            z-index: 1;
+            }
+
+            .register-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 500px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 2;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            }
+
+            .register-header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+
+            h1 {
+                font-size: 28px;
+                margin: 0 0 10px;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            }
+            }
+
+            .form-group {
+            margin-bottom: 20px;
+
+            label {
+                display: block;
+                margin-bottom: 8px;
+                font-weight: 500;
+                color: white;
+                text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            }
+            }
+
+            .input-field {
+            position: relative;
+
+            input {
+                width: 100%;
+                padding: 12px 15px 12px 45px;
+                background: rgba(255, 255, 255, 0.15);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                border-radius: 8px;
+                font-size: 16px;
+                transition: all 0.3s;
+                color: white;
+
+                &::placeholder {
+                color: rgba(255, 255, 255, 0.7);
+                }
+
+                &:focus {
+                background: rgba(255, 255, 255, 0.25);
+                border-color: white;
+                box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+                outline: none;
+                }
+            }
+
+            .input-icon {
+                position: absolute;
+                left: 15px;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 20px;
+                height: 20px;
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: 20px 20px;
+            }
+
+            .email-icon {
+                background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="white" d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-.4 4.25l-7.07 4.42c-.32.2-.74.2-1.06 0L4.4 8.25c-.25-.16-.4-.43-.4-.72 0-.67.73-1.07 1.3-.72L12 11l6.7-4.19c.57-.35 1.3.05 1.3.72 0 .29-.15.56-.4.72z"/></svg>');
+            }
+
+            .lock-icon {
+                background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="white" d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM9 8V6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9z"/></svg>');
+            }
+
+            .password-toggle {
+                position: absolute;
+                right: 15px;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 24px;
+                height: 24px;
+                cursor: pointer;
+                
+                .eye-icon {
+                display: block;
+                width: 20px;
+                height: 20px;
+                background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="white" d="M12 4C7 4 2.73 7.11 1 11.5 2.73 15.89 7 19 12 19s9.27-3.11 11-7.5C21.27 7.11 17 4 12 4zm0 12.5c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>');
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: 20px 20px;
+                
+                &.closed {
+                    background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="white" d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>');
+                }
+                }
+            }
+            }
+
+            .error-message {
+            background: rgba(239, 83, 80, 0.3);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            }
+
+            .btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            margin-top: 10px;
+            }
+
+            .btn-primary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.3);
+            }
+
+            &:disabled {
+                opacity: 0.7;
+                cursor: not-allowed;
+            }
+            }
+
+            .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 20px 0;
+            color: rgba(255, 255, 255, 0.8);
+
+            &::before,
+            &::after {
+                content: '';
+                flex: 1;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            }
+
+            span {
+                padding: 0 10px;
+                font-size: 14px;
+                text-transform: uppercase;
+            }
+            }
+
+            .google-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+
+            .google-icon {
+                width: 20px;
+                height: 20px;
+                position: relative;
+                display: inline-flex;
+                background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="%234285F4" d="M386 400c45-42 65-112 53-179H260v74h102c-4 24-18 44-38 57z"/><path fill="%2334A853" d="M90 341a192 192 0 0 0 296 59l-62-48c-53 35-141 22-171-60z"/><path fill="%23FBBC02" d="M153 292c-8-25-8-48 0-73l-63-49c-23 46-30 111 0 171z"/><path fill="%23EA4335" d="M153 219c22-69 116-109 179-50l55-54c-78-75-230-72-297 55z"/></svg>');
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: 20px 20px;
+            }
+            }
+
+            .auth-footer {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.8);
+
+            a {
+                color: white;
+                font-weight: 500;
+                text-decoration: none;
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+
+                &:hover {
+                text-decoration: underline;
+                }
+            }
+            }
+
+            @media (max-width: 576px) {
+            .register-card {
+                padding: 30px 20px;
+            }
+            } 
+
+        register.component.ts:
+            import { Component } from '@angular/core';
+            import { CommonModule } from '@angular/common';
+            import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+            import { RouterModule, Router } from '@angular/router';
+            import { AuthService } from '../services/auth.service';
+
+            @Component({
+            selector: 'app-register',
+            standalone: true,
+            imports: [
+                CommonModule,
+                ReactiveFormsModule,
+                RouterModule
+            ],
+            templateUrl: './register.component.html',
+            styleUrls: ['./register.component.scss']
+            })
+            export class RegisterComponent {
+            registerForm: FormGroup;
+            showPassword = false;
+            showConfirmPassword = false;
+            errorMessage: string = '';
+
+            constructor(
+                private fb: FormBuilder,
+                private authService: AuthService,
+                private router: Router
+            ) {
+                this.registerForm = this.fb.group({
+                email: ['', [
+                    Validators.required,
+                    Validators.email,
+                    Validators.maxLength(100)
+                ]],
+                password: ['', [
+                    Validators.required,
+                    Validators.minLength(8),
+                    Validators.maxLength(50),
+                    Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-=\\[\\]{};\':"\\\\|,.<>\\/?])[A-Za-z\\d!@#$%^&*()_+\\-=\\[\\]{};\':"\\\\|,.<>\\/?]+$')
+                ]],
+                confirmPassword: ['', [Validators.required]]
+                }, { validator: this.passwordMatchValidator });
+            }
+
+            passwordMatchValidator(g: FormGroup) {
+                return g.get('password')?.value === g.get('confirmPassword')?.value
+                ? null : { 'mismatch': true };
+            }
+
+            get email() { return this.registerForm.get('email'); }
+            get password() { return this.registerForm.get('password'); }
+            get confirmPassword() { return this.registerForm.get('confirmPassword'); }
+
+            onSubmit() {
+                if (this.registerForm.valid) {
+                const { email, password } = this.registerForm.value;
+                this.authService.setRegistrationData({ email, password });
+                this.router.navigate(['auth/register/step2']);
+                }
+            }
+
+            togglePasswordVisibility(field: 'password' | 'confirmPassword') {
+                if (field === 'password') {
+                this.showPassword = !this.showPassword;
+                } else {
+                this.showConfirmPassword = !this.showConfirmPassword;
+                }
+            }
+
+            googleLogin() {
+                const clientId = '196351865869-kq6bbtfs5f9agrfk192kiff6kgnnvunb.apps.googleusercontent.com';
+                const redirectUri = encodeURIComponent('http://localhost:4200/auth-callback');
+                const scope = encodeURIComponent('email profile');
+                const responseType = 'code';
+                const accessType = 'offline';
+                
+                const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=${responseType}&access_type=${accessType}`;
+                
+                window.location.href = authUrl;
+            }
+            }
+
+        register-step2/:
+            register-step2.component.html:
+                <div class="register-container">
+                <div class="register-card">
+                    <div class="register-header">
+                    <h1>Завершение регистрации</h1>
+                    <p class="subtitle">Пожалуйста, заполните дополнительные данные</p>
+                    </div>
+
+                    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+                    <div class="form-group">
+                        <label for="firstName">Имя</label>
+                        <div class="input-field">
+                        <span class="input-icon">
+                            <i class="fas fa-user"></i>
+                        </span>
+                        <input
+                            type="text"
+                            id="firstName"
+                            formControlName="firstName"
+                            placeholder="Введите ваше имя"
+                        >
+                        </div>
+                        <div class="error-message" *ngIf="firstName?.invalid && (firstName?.dirty || firstName?.touched)">
+                        <div *ngIf="firstName?.errors?.['required']">Имя обязательно для заполнения</div>
+                        <div *ngIf="firstName?.errors?.['minlength']">Имя должно содержать минимум 2 символа</div>
+                        <div *ngIf="firstName?.errors?.['maxlength']">Имя не должно превышать 50 символов</div>
+                        <div *ngIf="firstName?.errors?.['pattern']">Имя может содержать только буквы и дефис</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lastName">Фамилия</label>
+                        <div class="input-field">
+                        <span class="input-icon">
+                            <i class="fas fa-user"></i>
+                        </span>
+                        <input
+                            type="text"
+                            id="lastName"
+                            formControlName="lastName"
+                            placeholder="Введите вашу фамилию"
+                        >
+                        </div>
+                        <div class="error-message" *ngIf="lastName?.invalid && (lastName?.dirty || lastName?.touched)">
+                        <div *ngIf="lastName?.errors?.['required']">Фамилия обязательна для заполнения</div>
+                        <div *ngIf="lastName?.errors?.['minlength']">Фамилия должна содержать минимум 2 символа</div>
+                        <div *ngIf="lastName?.errors?.['maxlength']">Фамилия не должна превышать 50 символов</div>
+                        <div *ngIf="lastName?.errors?.['pattern']">Фамилия может содержать только буквы и дефис</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dateOfBirth">Дата рождения</label>
+                        <div class="input-field">
+                        <span class="input-icon">
+                            <i class="fas fa-calendar"></i>
+                        </span>
+                        <input
+                            type="date"
+                            id="dateOfBirth"
+                            formControlName="dateOfBirth"
+                        >
+                        </div>
+                        <div class="error-message" *ngIf="dateOfBirth?.invalid && (dateOfBirth?.dirty || dateOfBirth?.touched)">
+                        <div *ngIf="dateOfBirth?.errors?.['required']">Дата рождения обязательна для заполнения</div>
+                        <div *ngIf="dateOfBirth?.errors?.['age']">Возраст должен быть от 18 до 100 лет</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phoneNumber">Номер телефона</label>
+                        <div class="input-field">
+                        <span class="input-icon">
+                            <i class="fas fa-phone"></i>
+                        </span>
+                        <input
+                            type="tel"
+                            id="phoneNumber"
+                            formControlName="phoneNumber"
+                            placeholder="+7 (XXX) XXX-XX-XX"
+                        >
+                        </div>
+                        <div class="error-message" *ngIf="phoneNumber?.invalid && (phoneNumber?.dirty || phoneNumber?.touched)">
+                        <div *ngIf="phoneNumber?.errors?.['required']">Номер телефона обязателен для заполнения</div>
+                        <div *ngIf="phoneNumber?.errors?.['pattern']">Введите корректный номер телефона</div>
+                        </div>
+                    </div>
+
+                    <button type="submit" [disabled]="registerForm.invalid">
+                        <i class="fas fa-check"></i>
+                        Завершить регистрацию
+                    </button>
+                    </form>
+                </div>
+                </div> 
+
+            register-step2.component.scss:
+                @use '@angular/material' as mat;
+                @use '../../../../styles/variables' as *;
+
+                :host {
+                display: block;
+                width: 100%;
+                height: 100%;
+                }
+
+                .register-container {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                background: url('/assets/images/auth-bg.jpg') no-repeat center center;
+                background-size: cover;
+                padding: 20px;
+                position: relative;
+                }
+
+                .register-container::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.3);
+                backdrop-filter: blur(8px);
+                z-index: 1;
+                }
+
+                .register-card {
+                background: rgba(255, 255, 255, 0.15);
+                backdrop-filter: blur(12px);
+                border-radius: 16px;
+                width: 100%;
+                max-width: 500px;
+                padding: 40px;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+                position: relative;
+                z-index: 2;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                }
+
+                .register-header {
+                text-align: center;
+                margin-bottom: 30px;
+                color: white;
+
+                h1 {
+                    font-size: 28px;
+                    margin: 0 0 10px;
+                    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                }
+
+                .subtitle {
+                    color: rgba(255, 255, 255, 0.8);
+                    font-size: 16px;
+                    margin: 0;
+                }
+                }
+
+                .form-group {
+                margin-bottom: 20px;
+
+                label {
+                    display: block;
+                    margin-bottom: 8px;
+                    font-weight: 500;
+                    color: white;
+                    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+                }
+                }
+
+                .input-field {
+                position: relative;
+
+                input {
+                    width: 100%;
+                    padding: 12px 15px 12px 45px;
+                    background: rgba(255, 255, 255, 0.15);
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    border-radius: 8px;
+                    font-size: 16px;
+                    transition: all 0.3s;
+                    color: white;
+
+                    &::placeholder {
+                    color: rgba(255, 255, 255, 0.7);
+                    }
+
+                    &:focus {
+                    background: rgba(255, 255, 255, 0.25);
+                    border-color: white;
+                    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+                    outline: none;
+                    }
+                }
+
+                .input-icon {
+                    position: absolute;
+                    left: 15px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    color: rgba(255, 255, 255, 0.8);
+                    font-size: 1.1rem;
+                }
+                }
+
+                .error-message {
+                background: rgba(239, 83, 80, 0.3);
+                color: white;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                padding: 15px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                text-align: center;
+                }
+
+                button {
+                display: block;
+                width: 100%;
+                padding: 14px;
+                border-radius: 8px;
+                font-weight: 600;
+                font-size: 16px;
+                cursor: pointer;
+                transition: all 0.3s;
+                border: none;
+                margin-top: 10px;
+                background: rgba(255, 255, 255, 0.2);
+                color: white;
+                border: 1px solid rgba(255, 255, 255, 0.4);
+
+                &:hover {
+                    background: rgba(255, 255, 255, 0.3);
+                }
+
+                &:disabled {
+                    opacity: 0.7;
+                    cursor: not-allowed;
+                }
+
+                i {
+                    margin-right: 8px;
+                }
+                }
+
+                @media (max-width: 576px) {
+                .register-card {
+                    padding: 30px 20px;
+                }
+                } 
+
+            register-step2.component.ts:
+                import { Component } from '@angular/core';
+                import { CommonModule } from '@angular/common';
+                import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+                import { RouterModule, Router } from '@angular/router';
+                import { AuthService } from '../../services/auth.service';
+
+                @Component({
+                selector: 'app-register-step2',
+                standalone: true,
+                imports: [
+                    CommonModule,
+                    ReactiveFormsModule,
+                    RouterModule
+                ],
+                templateUrl: './register-step2.component.html',
+                styleUrls: ['./register-step2.component.scss']
+                })
+                export class RegisterStep2Component {
+                registerForm!: FormGroup;
+                errorMessage: string = '';
+                minDate: string;
+                maxDate: string;
+
+                constructor(
+                    private fb: FormBuilder,
+                    private authService: AuthService,
+                    private router: Router
+                ) {
+                    const today = new Date();
+                    const minDate = new Date();
+                    minDate.setFullYear(today.getFullYear() - 100);
+                    const maxDate = new Date();
+                    maxDate.setFullYear(today.getFullYear() - 14);
+
+                    this.minDate = minDate.toISOString().split('T')[0];
+                    this.maxDate = maxDate.toISOString().split('T')[0];
+
+                    this.initializeForm();
+                }
+
+                private initializeForm() {
+                    this.registerForm = this.fb.group({
+                    firstName: ['', [
+                        Validators.required,
+                        Validators.minLength(2),
+                        Validators.maxLength(50),
+                        Validators.pattern('^[а-яА-ЯёЁa-zA-Z\\s-]+$')
+                    ]],
+                    lastName: ['', [
+                        Validators.required,
+                        Validators.minLength(2),
+                        Validators.maxLength(50),
+                        Validators.pattern('^[а-яА-ЯёЁa-zA-Z\\s-]+$')
+                    ]],
+                    dateOfBirth: ['', [
+                        Validators.required,
+                        this.validateDateOfBirth
+                    ]],
+                    phoneNumber: ['', [
+                        Validators.required,
+                        Validators.pattern('^\\+375(29|25|44|33)\\d{7}$')
+                    ]]
+                    });
+                }
+
+                validateDateOfBirth(control: any) {
+                    const date = new Date(control.value);
+                    const today = new Date();
+                    const minDate = new Date();
+                    minDate.setFullYear(today.getFullYear() - 100);
+                    const maxDate = new Date();
+                    maxDate.setFullYear(today.getFullYear() - 14);
+
+                    if (date < minDate || date > maxDate) {
+                    return { invalidDate: true };
+                    }
+                    return null;
+                }
+
+                get firstName() { return this.registerForm.get('firstName')!; }
+                get lastName() { return this.registerForm.get('lastName')!; }
+                get dateOfBirth() { return this.registerForm.get('dateOfBirth')!; }
+                get phoneNumber() { return this.registerForm.get('phoneNumber')!; }
+
+                onSubmit() {
+                    if (this.registerForm.valid) {
+                    const registrationData = {
+                        ...this.authService.getRegistrationData(),
+                        ...this.registerForm.value
+                    };
+
+                    console.log('Registration data:', registrationData); 
+
+                    this.authService.register(
+                        registrationData.email,
+                        registrationData.password,
+                        registrationData.firstName,
+                        registrationData.lastName,
+                        registrationData.dateOfBirth,
+                        registrationData.phoneNumber
+                    ).subscribe({
+                        next: (response) => {
+                        this.router.navigate(['/auth/login']);
+                        },
+                        error: (error) => {
+                        this.errorMessage = error.message || 'Произошла ошибка при регистрации';
+                        }
+                    });
+                    }
+                }
+                } 
+
+    login/:
+        login.component.html:
+            <!-- src/app/auth/login/login.component.html -->
+            <div class="login-container">
+            <div class="login-card">
+                <div class="login-header">
+                <h1>Вход в систему</h1>
+                </div>
+
+                <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <div class="input-field">
+                    <span class="input-icon email-icon"></span>
+                    <input
+                        type="email"
+                        id="email"
+                        formControlName="email"
+                        placeholder="Введите email"
+                        required
+                    />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <div class="input-field">
+                    <span class="input-icon lock-icon"></span>
+                    <input
+                        [type]="showPassword ? 'text' : 'password'"
+                        id="password"
+                        formControlName="password"
+                        placeholder="Введите пароль"
+                        required
+                    />
+                    <span
+                        class="password-toggle"
+                        (click)="togglePasswordVisibility()"
+                    >
+                        <span class="eye-icon" [class.closed]="showPassword"></span>
+                    </span>
+                    </div>
+                </div>
+
+                <div *ngIf="errorMessage" class="error-message">
+                    {{ errorMessage }}
+                </div>
+
+                <button type="submit" class="btn btn-primary" [disabled]="!loginForm.valid">
+                    Войти
+                </button>
+
+                <div class="divider">
+                    <span>или</span>
+                </div>
+
+                <button type="button" class="btn btn-primary google-button" (click)="googleLogin()">
+                    <div class="google-icon"></div>
+                    Войти через Google
+                </button>
+                </form>
+
+                <div class="auth-footer">
+                <p>Нет аккаунта? <a routerLink="/auth/register">Зарегистрироваться</a></p>
+                </div>
+            </div>
+            </div>
+
+        login.component.scss:
+            @use '@angular/material' as mat;
+            @use '../../../styles/variables' as *;
+
+            :host {
+            display: block;
+            width: 100%;
+            height: 100%;
+            }
+
+            .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: url('../../../assets/images/auth-bg.jpg') no-repeat center center;
+            background-size: cover;
+            padding: 20px;
+            position: relative;
+            }
+
+            .login-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(8px);
+            z-index: 1;
+            }
+
+            .login-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 500px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 2;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            }
+
+            .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+
+            h1 {
+                font-size: 28px;
+                margin: 0 0 10px;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            }
+            }
+
+            .form-group {
+            margin-bottom: 20px;
+
+            label {
+                display: block;
+                margin-bottom: 8px;
+                font-weight: 500;
+                color: white;
+                text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            }
+            }
+
+            .input-field {
+            position: relative;
+
+            input {
+                width: 100%;
+                padding: 12px 15px 12px 45px;
+                background: rgba(255, 255, 255, 0.15);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                border-radius: 8px;
+                font-size: 16px;
+                transition: all 0.3s;
+                color: white;
+
+                &::placeholder {
+                color: rgba(255, 255, 255, 0.7);
+                }
+
+                &:focus {
+                background: rgba(255, 255, 255, 0.25);
+                border-color: white;
+                box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+                outline: none;
+                }
+            }
+
+            .input-icon {
+                position: absolute;
+                left: 15px;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 20px;
+                height: 20px;
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: 20px 20px;
+            }
+
+            .email-icon {
+                background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="white" d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-.4 4.25l-7.07 4.42c-.32.2-.74.2-1.06 0L4.4 8.25c-.25-.16-.4-.43-.4-.72 0-.67.73-1.07 1.3-.72L12 11l6.7-4.19c.57-.35 1.3.05 1.3.72 0 .29-.15.56-.4.72z"/></svg>');
+            }
+
+            .lock-icon {
+                background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="white" d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM9 8V6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9z"/></svg>');
+            }
+
+            .password-toggle {
+                position: absolute;
+                right: 15px;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 24px;
+                height: 24px;
+                cursor: pointer;
+                
+                .eye-icon {
+                display: block;
+                width: 20px;
+                height: 20px;
+                background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="white" d="M12 4C7 4 2.73 7.11 1 11.5 2.73 15.89 7 19 12 19s9.27-3.11 11-7.5C21.27 7.11 17 4 12 4zm0 12.5c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>');
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: 20px 20px;
+                
+                &.closed {
+                    background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="white" d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>');
+                }
+                }
+            }
+            }
+
+            .error-message {
+            background: rgba(239, 83, 80, 0.3);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            }
+
+            .btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            margin-top: 10px;
+            }
+
+            .btn-primary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.3);
+            }
+
+            &:disabled {
+                opacity: 0.7;
+                cursor: not-allowed;
+            }
+            }
+
+            .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 20px 0;
+            color: rgba(255, 255, 255, 0.8);
+
+            &::before,
+            &::after {
+                content: '';
+                flex: 1;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            }
+
+            span {
+                padding: 0 10px;
+                font-size: 14px;
+                text-transform: uppercase;
+            }
+            }
+
+            .google-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+
+            .google-icon {
+                width: 20px;
+                height: 20px;
+                position: relative;
+                display: inline-flex;
+                background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="%234285F4" d="M386 400c45-42 65-112 53-179H260v74h102c-4 24-18 44-38 57z"/><path fill="%2334A853" d="M90 341a192 192 0 0 0 296 59l-62-48c-53 35-141 22-171-60z"/><path fill="%23FBBC02" d="M153 292c-8-25-8-48 0-73l-63-49c-23 46-30 111 0 171z"/><path fill="%23EA4335" d="M153 219c22-69 116-109 179-50l55-54c-78-75-230-72-297 55z"/></svg>');
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: 20px 20px;
+            }
+            }
+
+            .auth-footer {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.8);
+
+            a {
+                color: white;
+                font-weight: 500;
+                text-decoration: none;
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+
+                &:hover {
+                text-decoration: underline;
+                }
+            }
+            }
+
+            @media (max-width: 576px) {
+            .login-card {
+                padding: 30px 20px;
+            }
+            }
+
+        login.component.spec.ts:
+            import { ComponentFixture, TestBed } from '@angular/core/testing';
+            import { LoginComponent } from './login.component';
+
+            describe('LoginComponent', () => {
+            let component: LoginComponent;
+            let fixture: ComponentFixture<LoginComponent>;
+
+            beforeEach(async () => {
+                await TestBed.configureTestingModule({
+                imports: [LoginComponent]
+                })
+                .compileComponents();
+
+                fixture = TestBed.createComponent(LoginComponent);
+                component = fixture.componentInstance;
+                fixture.detectChanges();
+            });
+
+            it('should create', () => {
+                expect(component).toBeTruthy();
+            });
+            });
+
+
+        login.component.ts:
+            import { Component } from '@angular/core';
+            import { CommonModule } from '@angular/common';
+            import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+            import { RouterModule } from '@angular/router';
+            import { AuthService } from '../services/auth.service';
+
+            @Component({
+            selector: 'app-login',
+            standalone: true,
+            imports: [
+                CommonModule,
+                ReactiveFormsModule,
+                RouterModule
+            ],
+            templateUrl: './login.component.html',
+            styleUrls: ['./login.component.scss']
+            })
+            export class LoginComponent {
+            loginForm: FormGroup;
+            showPassword = false;
+            errorMessage: string = '';
+
+            constructor(
+                private fb: FormBuilder,
+                private authService: AuthService
+            ) {
+                this.loginForm = this.fb.group({
+                email: ['', [Validators.required, Validators.email]],
+                password: ['', [Validators.required]]
+                });
+            }
+
+            onSubmit() {
+                if (this.loginForm.valid) {
+                const { email, password } = this.loginForm.value;
+                this.authService.login(email, password).subscribe({
+                    next: () => {
+                    window.location.href = '/';
+                    },
+                    error: (error) => {
+                    this.errorMessage = error.error.message || 'Ошибка при входе';
+                    }
+                });
+                }
+            }
+
+            togglePasswordVisibility() {
+                this.showPassword = !this.showPassword;
+            }
+
+            googleLogin() {
+                const clientId = '196351865869-kq6bbtfs5f9agrfk192kiff6kgnnvunb.apps.googleusercontent.com';
+                const redirectUri = encodeURIComponent('http://localhost:4200/auth-callback');
+                const scope = encodeURIComponent('email profile');
+                const responseType = 'code';
+                const accessType = 'offline';
+                
+                const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=${responseType}&access_type=${accessType}`;
+                
+                window.location.href = authUrl;
+            }
+            }
+
+src/app/components/:
+    auth-callback/:
+        auth-callback.component.ts:
+            import { Component, OnInit } from '@angular/core';
+            import { CommonModule } from '@angular/common';
+            import { ActivatedRoute, Router } from '@angular/router';
+            import { AuthService } from '../../services/auth.service';
+
+            @Component({
+            selector: 'app-auth-callback',
+            standalone: true,
+            imports: [CommonModule],
+            template: `
+                <div class="callback-container">
+                <div class="spinner"></div>
+                <p>Авторизация...</p>
+                </div>
+            `,
+            styles: [`
+                .callback-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                }
+                
+                .spinner {
+                border: 4px solid rgba(0, 0, 0, 0.1);
+                border-radius: 50%;
+                border-top: 4px solid #3498db;
+                width: 40px;
+                height: 40px;
+                animation: spin 1s linear infinite;
+                margin-bottom: 20px;
+                }
+                
+                @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+                }
+            `]
+            })
+            export class AuthCallbackComponent implements OnInit {
+            constructor(
+                private route: ActivatedRoute,
+                private router: Router,
+                private authService: AuthService
+            ) {}
+
+            ngOnInit() {
+                this.route.queryParams.subscribe(params => {
+                const code = params['code'];
+                
+                if (code) {
+                    const redirectUri = 'http://localhost:4200/auth-callback';
+                    
+                    console.log('Отправка кода авторизации на сервер:', code);
+                    console.log('URL API:', this.authService['API_URL']);
+                    
+                    this.authService.googleLogin(code, redirectUri)
+                    .subscribe({
+                        next: (response) => {
+                        console.log('Успешная авторизация', response);
+                        this.router.navigate(['/']);
+                        },
+                        error: (error) => {
+                        console.error('Ошибка авторизации', error);
+                        
+                        if (error.status === 0) {
+                            console.error('Сервер недоступен. Проверьте, запущен ли серверный API');
+                        } else if (error.status === 404) {
+                            console.error('API endpoint не найден. Проверьте правильность URL');
+                        }
+                        
+                        this.router.navigate(['/login']);
+                        }
+                    });
+                } else {
+                    this.router.navigate(['/login']);
+                }
+                });
+            }
+            } 
+
+    login/:
+        login.component.ts:
+            import { Component } from '@angular/core';
+            import { CommonModule } from '@angular/common';
+
+            @Component({
+            selector: 'app-login',
+            standalone: true,
+            imports: [CommonModule],
+            template: `
+                <div class="login-container">
+                <h2>Вход в систему</h2>
+                <button (click)="loginWithGoogle()" class="google-btn">
+                    <img src="assets/google-icon.svg" alt="Google" width="20" height="20">
+                    Войти через Google
+                </button>
+                </div>
+            `,
+            styles: [`
+                .login-container {
+                max-width: 400px;
+                margin: 50px auto;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                text-align: center;
+                }
+                
+                h2 {
+                margin-bottom: 20px;
+                color: #333;
+                }
+                
+                .google-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                padding: 10px 20px;
+                background-color: #fff;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 16px;
+                transition: background-color 0.3s;
+                }
+                
+                .google-btn:hover {
+                background-color: #f1f1f1;
+                }
+            `]
+            })
+            export class LoginComponent {
+            
+            loginWithGoogle() {
+                const clientId = '196351865869-kq6bbtfs5f9agrfk192kiff6kgnnvunb.apps.googleusercontent.com';
+                const redirectUri = encodeURIComponent('http://localhost:4200/auth-callback');
+                const scope = encodeURIComponent('email profile');
+                const responseType = 'code';
+                const accessType = 'offline';
+                
+                const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=${responseType}&access_type=${accessType}`;
+                
+                window.location.href = authUrl;
+            }
+            } 
+
+src/app/services/:
+    auth.service.ts:
+        import { Injectable } from '@angular/core';
+        import { HttpClient } from '@angular/common/http';
+        import { BehaviorSubject, Observable, tap } from 'rxjs';
+        import { Router } from '@angular/router';
+
+        export interface User {
+            id: number;
+            name: string;
+            email: string;
+            googleId: string;
+            profilePictureUrl: string;
+        }
+
+        export interface AuthResponse {
+            token: string;
+            user: User;
+        }
+
+        @Injectable({
+            providedIn: 'root'
+        })
+        export class AuthService {
+            private readonly API_URL = 'http://localhost:5198/api';
+            private tokenKey = 'auth_token';
+            private userKey = 'auth_user';
+            private registrationData: any = null;
+            
+            private currentUserSubject = new BehaviorSubject<User | null>(null);
+            public currentUser$ = this.currentUserSubject.asObservable();
+            
+            private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
+            public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
+
+            constructor(
+                private http: HttpClient,
+                private router: Router
+            ) {
+                this.loadStoredAuth();
+            }
+
+            setRegistrationData(data: any) {
+                this.registrationData = data;
+            }
+
+            getRegistrationData() {
+                return this.registrationData;
+            }
+
+            private loadStoredAuth(): void {
+                const token = localStorage.getItem(this.tokenKey);
+                const userJson = localStorage.getItem(this.userKey);
+                
+                if (token && userJson) {
+                    try {
+                        const user = JSON.parse(userJson) as User;
+                        this.currentUserSubject.next(user);
+                        this.isAuthenticatedSubject.next(true);
+                    } catch (e) {
+                        this.logout();
+                    }
+                }
+            }
+
+            public login(email: string, password: string): Observable<AuthResponse> {
+                return this.http.post<AuthResponse>(`${this.API_URL}/auth/login`, { email, password })
+                    .pipe(
+                        tap(response => this.handleAuthentication(response))
+                    );
+            }
+
+            public googleLogin(code: string, redirectUri: string): Observable<AuthResponse> {
+                return this.http.post<AuthResponse>(`${this.API_URL}/auth/google`, { code, redirectUri })
+                    .pipe(
+                        tap(response => this.handleAuthentication(response))
+                    );
+            }
+
+            private handleAuthentication(response: AuthResponse): void {
+                localStorage.setItem(this.tokenKey, response.token);
+                localStorage.setItem(this.userKey, JSON.stringify(response.user));
+                
+                this.currentUserSubject.next(response.user);
+                this.isAuthenticatedSubject.next(true);
+            }
+
+            public logout(): void {
+                localStorage.removeItem(this.tokenKey);
+                localStorage.removeItem(this.userKey);
+                
+                this.currentUserSubject.next(null);
+                this.isAuthenticatedSubject.next(false);
+                
+                this.router.navigate(['/login']);
+            }
+
+            public getToken(): string | null {
+                return localStorage.getItem(this.tokenKey);
+            }
+
+            public isLoggedIn(): boolean {
+                return !!this.getToken();
+            }
+
+            register(email: string, password: string, firstName: string, lastName: string, dateOfBirth?: string, phone?: string): Observable<any> {
+                return this.http.post<any>(`${this.API_URL}/register`, { 
+                    email, 
+                    password, 
+                    firstName, 
+                    lastName, 
+                    dateOfBirth, 
+                    phone 
+                });
+            }
+        }
+
+    auth.interceptor.ts:
+        import { Injectable } from '@angular/core';
+        import {
+            HttpRequest,
+            HttpHandler,
+            HttpEvent,
+            HttpInterceptor
+        } from '@angular/common/http';
+        import { Observable } from 'rxjs';
+        import { AuthService } from './auth.service';
+
+        @Injectable()
+        export class AuthInterceptor implements HttpInterceptor {
+            constructor(private authService: AuthService) {}
+
+            intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
+                const token = this.authService.getToken();
+                
+                if (token) {
+                    const authRequest = request.clone({
+                        setHeaders: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    });
+                    return next.handle(authRequest);
+                }
+                
+                return next.handle(request);
+            }
+        }
+
+    app.config.ts:
+        import { ApplicationConfig, inject } from '@angular/core';
+        import { provideRouter, withViewTransitions } from '@angular/router';
+        import { provideHttpClient, withInterceptors } from '@angular/common/http';
+        import { AuthService } from './services/auth.service';
+        import { RegisterStep2Component } from './pages/register/register-step2/register-step2.component';
+
+        import { routes } from './app.routes';
+
+        export const appConfig: ApplicationConfig = {
+            providers: [
+                provideRouter(routes, withViewTransitions()),
+                provideHttpClient(withInterceptors([
+                    (req, next) => {
+                        try {
+                            const authService = inject(AuthService);
+                            const token = authService.getToken();
+                            if (token) {
+                                const authReq = req.clone({
+                                    setHeaders: {
+                                        Authorization: `Bearer ${token}`
+                                    }
+                                });
+                                return next(authReq);
+                            }
+                        } catch (e) {
+                        }
+                        return next(req);
+                    }
+                ]))
+            ]
+        };
+
+    user.service.spec.ts:
+import { TestBed } from '@angular/core/testing';
+
+import { UserService } from './user.service';
+
+describe('UserService', () => {
+  let service: UserService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(UserService);
+  });
+
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
+});
+
+
+
+    user.service.ts:
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+export interface User {
+  id: number;
+  name: string;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class UserService {
+  private apiUrl = 'http://localhost:5198/api/user';
+
+  constructor(private http: HttpClient) {}
+
+  getUser(id: number): Observable<User> {
+    return this.http.get<User>(`${this.apiUrl}/${id}`);
+  }
+}
+
+
+
+
+src/app/models/: пока пусто
+
+src/assets/:
+    src/assets/images:
+        auth-bg.jpg
+
+src/styles/: 
+global.scss:
+// Глобальные стили для шрифта Unbounded
+html, body {
+  font-family: 'Unbounded', sans-serif;
+}
+
+mixins.scss:
+// @use 'sass:color';
+
+// @mixin auth-container {
+//   display: flex;
+//   justify-content: center;
+//   align-items: center;
+//   min-height: 100vh;
+//   background-color: var(--background-color);
+//   padding: 2rem;
+// }
+
+// @mixin auth-card {
+//   background: white;
+//   border-radius: 12px;
+//   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+//   width: 100%;
+// }
+
+// @mixin auth-header {
+//   text-align: center;
+//   margin-bottom: 2rem;
+// }
+
+// @mixin auth-form {
+//   display: flex;
+//   flex-direction: column;
+//   gap: 1rem;
+// }
+
+// @mixin form-group {
+//   margin-bottom: 1.5rem;
+// }
+
+// @mixin form-label {
+//   display: block;
+//   margin-bottom: 0.5rem;
+//   color: var(--text-primary);
+//   font-weight: 500;
+// }
+
+// @mixin form-input {
+//   width: 100%;
+//   padding: 12px 15px;
+//   border: 1px solid var(--border-color);
+//   border-radius: 8px;
+//   font-size: 16px;
+//   transition: all 0.3s ease;
+//   background-color: var(--background-color);
+// }
+
+// @mixin error-message {
+//   color: var(--error-color);
+//   font-size: 14px;
+//   margin-top: 8px;
+// }
+
+// @mixin primary-button {
+//   background-color: var(--primary-color);
+//   color: white;
+//   border: none;
+//   padding: 12px 24px;
+//   border-radius: 8px;
+//   font-size: 16px;
+//   font-weight: 500;
+//   cursor: pointer;
+//   transition: all 0.3s ease;
+
+//   &:hover {
+//     background-color: var(--primary-color-hover);
+//   }
+
+//   &:disabled {
+//     background-color: var(--disabled-color);
+//     cursor: not-allowed;
+//   }
+// } 
+
+пока закомментила, может верну.
+
+variables.scss:
+$primary-color: #7e57c2;
+$primary-color-hover: #6a4a9c;
+$background-color: #f5f5f5;
+$card-background: #ffffff;
+$text-color: #333333;
+$text-primary: #333333;
+$text-secondary: #666666;
+$border-color: #e0e0e0;
+$input-background: #ffffff;
+$error-color: #ef5350;
+$disabled-color: #bdbdbd;
+$hover-color: #f5f5f5; 

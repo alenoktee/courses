@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { AuthService } from '../services/auth.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -33,11 +33,11 @@ export class LoginComponent {
   onSubmit() {
     if (this.loginForm.valid) {
       const { email, password } = this.loginForm.value;
-      this.authService.login(email, password).subscribe({
+      this.authService.googleLogin(email, password).subscribe({
         next: () => {
           window.location.href = '/';
         },
-        error: (error) => {
+        error: (error: any) => { // Можно заменить `any` на конкретный тип, например, `HttpErrorResponse`
           this.errorMessage = error.error.message || 'Ошибка при входе';
         }
       });

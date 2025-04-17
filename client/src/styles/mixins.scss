@@ -1,76 +1,76 @@
-@use 'sass:color';
+// @use 'sass:color';
 
-@mixin auth-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background-color: var(--background-color);
-  padding: 2rem;
-}
+// @mixin auth-container {
+//   display: flex;
+//   justify-content: center;
+//   align-items: center;
+//   min-height: 100vh;
+//   background-color: var(--background-color);
+//   padding: 2rem;
+// }
 
-@mixin auth-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  width: 100%;
-}
+// @mixin auth-card {
+//   background: white;
+//   border-radius: 12px;
+//   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+//   width: 100%;
+// }
 
-@mixin auth-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
+// @mixin auth-header {
+//   text-align: center;
+//   margin-bottom: 2rem;
+// }
 
-@mixin auth-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
+// @mixin auth-form {
+//   display: flex;
+//   flex-direction: column;
+//   gap: 1rem;
+// }
 
-@mixin form-group {
-  margin-bottom: 1.5rem;
-}
+// @mixin form-group {
+//   margin-bottom: 1.5rem;
+// }
 
-@mixin form-label {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: var(--text-primary);
-  font-weight: 500;
-}
+// @mixin form-label {
+//   display: block;
+//   margin-bottom: 0.5rem;
+//   color: var(--text-primary);
+//   font-weight: 500;
+// }
 
-@mixin form-input {
-  width: 100%;
-  padding: 12px 15px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  font-size: 16px;
-  transition: all 0.3s ease;
-  background-color: var(--background-color);
-}
+// @mixin form-input {
+//   width: 100%;
+//   padding: 12px 15px;
+//   border: 1px solid var(--border-color);
+//   border-radius: 8px;
+//   font-size: 16px;
+//   transition: all 0.3s ease;
+//   background-color: var(--background-color);
+// }
 
-@mixin error-message {
-  color: var(--error-color);
-  font-size: 14px;
-  margin-top: 8px;
-}
+// @mixin error-message {
+//   color: var(--error-color);
+//   font-size: 14px;
+//   margin-top: 8px;
+// }
 
-@mixin primary-button {
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
+// @mixin primary-button {
+//   background-color: var(--primary-color);
+//   color: white;
+//   border: none;
+//   padding: 12px 24px;
+//   border-radius: 8px;
+//   font-size: 16px;
+//   font-weight: 500;
+//   cursor: pointer;
+//   transition: all 0.3s ease;
 
-  &:hover {
-    background-color: var(--primary-color-hover);
-  }
+//   &:hover {
+//     background-color: var(--primary-color-hover);
+//   }
 
-  &:disabled {
-    background-color: var(--disabled-color);
-    cursor: not-allowed;
-  }
-} 
+//   &:disabled {
+//     background-color: var(--disabled-color);
+//     cursor: not-allowed;
+//   }
+// } 
