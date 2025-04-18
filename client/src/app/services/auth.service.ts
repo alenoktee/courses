@@ -20,7 +20,7 @@ export interface AuthResponse {
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly API_URL = 'http://localhost:5198/api';
+  private readonly API_URL = 'http://localhost:5198/api/auth';
   private tokenKey = 'auth_token';
   private userKey = 'auth_user';
   private registrationData: any = null;
