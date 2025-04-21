@@ -1,0 +1,36 @@
+<nz-layout class="app-layout">
+  <nz-header>
+    <div class="header-content">
+      <div class="logo"></div>
+      <h2 class="page-title">{{ pageTitle }}</h2>
+      <div class="header-right">
+        <ul nz-menu nzTheme="dark" nzMode="horizontal">
+          <li nz-menu-item nzSelected *ngIf="userRole === 'teacher'">
+            <a routerLink="/pages/dashboards/teacher-dashboard">Дашборд</a>
+          </li>
+          <li nz-menu-item nzSelected *ngIf="userRole === 'student'">
+            <a routerLink="/pages/dashboards/student-dashboard">Дашборд</a>
+          </li>
+          <li nz-menu-item>
+            <a routerLink="/auth/login" (click)="logout()">Выход</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nz-header>
+  
+  <nz-content>
+    <div class="content-container">
+      <nz-breadcrumb *ngIf="showBreadcrumb" class="breadcrumb-container">
+        <nz-breadcrumb-item>Главная</nz-breadcrumb-item>
+        <nz-breadcrumb-item>{{ pageTitle }}</nz-breadcrumb-item>
+      </nz-breadcrumb>
+      
+      <div class="main-content">
+        <ng-content></ng-content>
+      </div>
+    </div>
+  </nz-content>
+  
+  <nz-footer>© 2025 Образовательная платформа | Все права защищены</nz-footer>
+</nz-layout>

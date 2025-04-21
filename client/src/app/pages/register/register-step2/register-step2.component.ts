@@ -40,28 +40,52 @@ export class RegisterStep2Component {
 
   private initializeForm() {
     this.registerForm = this.fb.group({
-      firstName: ['', [
-        Validators.required,
-        Validators.minLength(2),
-        Validators.maxLength(50),
-        Validators.pattern('^[а-яА-ЯёЁa-zA-Z\\s-]+$')
-      ]],
-      lastName: ['', [
-        Validators.required,
-        Validators.minLength(2),
-        Validators.maxLength(50),
-        Validators.pattern('^[а-яА-ЯёЁa-zA-Z\\s-]+$')
-      ]],
-      dateOfBirth: ['', [
-        Validators.required,
-        this.validateDateOfBirth
-      ]],
-      phoneNumber: ['', [
-        Validators.required,
-        Validators.pattern('^\\+375(29|25|44|33)\\d{7}$')
-      ]]
+        firstName: ['', [
+            Validators.required,
+            Validators.minLength(2),
+            Validators.maxLength(50),
+            Validators.pattern('^[а-яА-ЯёЁa-zA-Z\\s-]+$')
+        ]],
+        lastName: ['', [
+            Validators.required,
+            Validators.minLength(2),
+            Validators.maxLength(50),
+            Validators.pattern('^[а-яА-ЯёЁa-zA-Z\\s-]+$')
+        ]],
+        middleName: ['', [ // Добавляем отчество
+            Validators.minLength(2),
+            Validators.maxLength(50),
+            Validators.pattern('^[а-яА-ЯёЁa-zA-Z\\s-]+$')
+        ]],
+        dateOfBirth: ['', [
+            Validators.required,
+            this.validateDateOfBirth
+        ]],
+        phone: ['', [
+            Validators.required,
+            Validators.pattern('^\\+375(29|25|44|33)\\d{7}$')
+        ]],
+        isTeacher: [false]
     });
   }
+
+  // ЗАПОЛНЕНИЕ СЛУЧ. ДАННЫМИ
+  fillFormWithRandomData() {
+    const randomFirstName = `Имя`;
+    const randomLastName = `Фамилия`;
+    const randomMiddleName = `Отчество`;
+    const randomPhone = `+37529${Math.floor(1000000 + Math.random() * 9000000)}`;
+    const randomDateOfBirth = new Date(1990 + Math.floor(Math.random() * 20), Math.floor(Math.random() * 12), Math.floor(Math.random() * 28)).toISOString().split('T')[0];
+
+    this.registerForm.setValue({
+        firstName: randomFirstName,
+        lastName: randomLastName,
+        middleName: randomMiddleName,
+        dateOfBirth: randomDateOfBirth,
+        phone: randomPhone,
+        isTeacher: Math.random() < 0.5
+    });
+}
 
   validateDateOfBirth(control: any) {
     const date = new Date(control.value);
@@ -80,7 +104,8 @@ export class RegisterStep2Component {
   get firstName() { return this.registerForm.get('firstName')!; }
   get lastName() { return this.registerForm.get('lastName')!; }
   get dateOfBirth() { return this.registerForm.get('dateOfBirth')!; }
-  get phoneNumber() { return this.registerForm.get('phoneNumber')!; }
+  get phone() { return this.registerForm.get('phone')!; }
+  get middleName() { return this.registerForm.get('middleName')!; }
 
   onSubmit() {
     if (this.registerForm.valid) {
@@ -88,19 +113,25 @@ export class RegisterStep2Component {
         ...this.authService.getRegistrationData(),
         ...this.registerForm.value
       };
-
+  
       console.log('Registration data:', registrationData); 
-
+  
       this.authService.register(
         registrationData.email,
         registrationData.password,
         registrationData.firstName,
         registrationData.lastName,
+        registrationData.middleName,
         registrationData.dateOfBirth,
-        registrationData.phoneNumber
+        registrationData.phone,
+        registrationData.isTeacher
       ).subscribe({
         next: (response) => {
-          this.router.navigate(['/auth/login']);
+          if (registrationData.isTeacher) {
+            this.router.navigate(['/pages/dashboards/teacher-dashboard']); 
+          } else {
+            this.router.navigate(['/pages/dashboards/student-dashboard']);
+          }
         },
         error: (error) => {
           this.errorMessage = error.message || 'Произошла ошибка при регистрации';
@@ -108,4 +139,4 @@ export class RegisterStep2Component {
       });
     }
   }
-} 
+}

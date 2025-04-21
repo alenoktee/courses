@@ -5,6 +5,11 @@
       <p class="subtitle">Пожалуйста, заполните дополнительные данные</p>
     </div>
 
+    <!-- ЗАПОЛНЕНИЕ СЛУЧ. ДАННЫМИ -->
+    <button (click)="fillFormWithRandomData()" style="position: fixed; top: 20px; right: 20px; z-index: 1000; background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+      Проверка
+  </button>
+
     <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
       <div class="form-group">
         <label for="firstName">Имя</label>
@@ -49,6 +54,26 @@
       </div>
 
       <div class="form-group">
+        <label for="middleName">Отчество</label>
+        <div class="input-field">
+            <span class="input-icon">
+                <i class="fas fa-user"></i>
+            </span>
+            <input
+                type="text"
+                id="middleName"
+                formControlName="middleName"
+                placeholder="Введите ваше отчество"
+            >
+        </div>
+        <div class="error-message" *ngIf="middleName?.invalid && (middleName?.dirty || middleName?.touched)">
+            <div *ngIf="middleName?.errors?.['minlength']">Отчество должно содержать минимум 2 символа</div>
+            <div *ngIf="middleName?.errors?.['maxlength']">Отчество не должно превышать 50 символов</div>
+            <div *ngIf="middleName?.errors?.['pattern']">Отчество может содержать только буквы и дефис</div>
+        </div>
+    </div>
+
+      <div class="form-group">
         <label for="dateOfBirth">Дата рождения</label>
         <div class="input-field">
           <span class="input-icon">
@@ -67,22 +92,29 @@
       </div>
 
       <div class="form-group">
-        <label for="phoneNumber">Номер телефона</label>
+        <label for="phone">Номер телефона</label>
         <div class="input-field">
           <span class="input-icon">
             <i class="fas fa-phone"></i>
           </span>
           <input
             type="tel"
-            id="phoneNumber"
-            formControlName="phoneNumber"
-            placeholder="+7 (XXX) XXX-XX-XX"
+            id="phone"
+            formControlName="phone"
+            placeholder="+375 (XX) XXX-XX-XX"
           >
         </div>
-        <div class="error-message" *ngIf="phoneNumber?.invalid && (phoneNumber?.dirty || phoneNumber?.touched)">
-          <div *ngIf="phoneNumber?.errors?.['required']">Номер телефона обязателен для заполнения</div>
-          <div *ngIf="phoneNumber?.errors?.['pattern']">Введите корректный номер телефона</div>
+        <div class="error-message" *ngIf="phone?.invalid && (phone?.dirty || phone?.touched)">
+          <div *ngIf="phone?.errors?.['required']">Номер телефона обязателен для заполнения</div>
+          <div *ngIf="phone?.errors?.['pattern']">Введите корректный номер телефона</div>
         </div>
+      </div>
+
+      <div class="form-group">
+        <label for="isTeacher">
+          <input type="checkbox" id="isTeacher" formControlName="isTeacher">
+          Я преподаватель
+        </label>
       </div>
 
       <button type="submit" [disabled]="registerForm.invalid">

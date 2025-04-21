@@ -4,6 +4,11 @@
       <h1>Регистрация</h1>
     </div>
 
+    <!-- ЗАПОЛНЕНИЕ СЛУЧ. ДАННЫМИ -->
+    <button (click)="fillFormWithRandomData()" style="position: fixed; top: 20px; right: 20px; z-index: 1000; background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+      Проверка
+  </button>
+
     <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
       <div class="form-group">
         <label for="email">Email</label>

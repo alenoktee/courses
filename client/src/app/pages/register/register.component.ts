@@ -53,11 +53,29 @@ export class RegisterComponent {
 
   onSubmit() {
     if (this.registerForm.valid) {
-      const { email, password } = this.registerForm.value;
-      this.authService.setRegistrationData({ email, password });
-      this.router.navigate(['auth/register/step2']);
+        const registrationData = {
+            ...this.authService.getRegistrationData(),
+            ...this.registerForm.value
+        };
+
+        console.log('Registration data:', registrationData); 
+
+        this.authService.setRegistrationData(registrationData);
+        this.router.navigate(['auth/register/step2']);
     }
-  }
+}
+
+// ЗАПОЛНЕНИЕ СЛУЧ. ДАННЫМИ
+fillFormWithRandomData() {
+  const randomEmail = `user${Math.floor(Math.random() * 1000)}@gmail.com`;
+  const randomPassword = `PaSSword${Math.floor(Math.random() * 1000)}!@#`;
+
+  this.registerForm.setValue({
+      email: randomEmail,
+      password: randomPassword,
+      confirmPassword: randomPassword
+  });
+}
 
   togglePasswordVisibility(field: 'password' | 'confirmPassword') {
     if (field === 'password') {

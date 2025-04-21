@@ -1,0 +1,35 @@
+<app-layout pageTitle="Личный кабинет студента" userRole="student">
+  <div class="dashboard-container">
+    <h1 nz-typography>Добро пожаловать, {{ userName }}!</h1>
+    <button nz-button nzType="primary">Тестовая кнопка</button>
+    
+    <nz-divider></nz-divider>
+    
+    <div nz-row [nzGutter]="16">
+      <div nz-col [nzSpan]="8">
+        <nz-card nzTitle="Мои курсы" [nzExtra]="extraTemplate">
+          <p>Вы не записаны ни на один курс</p>
+          <button nz-button nzType="default" nzBlock>Найти курсы</button>
+        </nz-card>
+      </div>
+      <div nz-col [nzSpan]="8">
+        <nz-card nzTitle="Расписание занятий">
+          <p>Нет запланированных занятий</p>
+          <button nz-button nzType="default" nzBlock>Календарь занятий</button>
+        </nz-card>
+      </div>
+      <div nz-col [nzSpan]="8">
+        <nz-card nzTitle="Прогресс обучения">
+          <p>Курсы: 0 / 0 (0%)</p>
+          <p>Задания: 0 / 0 (0%)</p>
+          <p>Тесты: 0 / 0 (0%)</p>
+          <button nz-button nzType="default" nzBlock>Подробнее</button>
+        </nz-card>
+      </div>
+    </div>
+  </div>
+</app-layout>
+
+<ng-template #extraTemplate>
+  <a nz-button nzType="link" nzSize="small"><span nz-icon nzType="search"></span></a>
+</ng-template>

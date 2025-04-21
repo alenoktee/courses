@@ -62,7 +62,7 @@ export class AuthService {
   }
 
   public googleLogin(code: string, redirectUri: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.API_URL}/auth/google`, { code, redirectUri })
+    return this.http.post<AuthResponse>(`${this.API_URL}/google`, { code, redirectUri })
       .pipe(
         tap(response => this.handleAuthentication(response))
       );
@@ -94,14 +94,16 @@ export class AuthService {
     return !!this.getToken();
   }
 
-  register(email: string, password: string, firstName: string, lastName: string, dateOfBirth?: string, phone?: string): Observable<any> {
+  register(email: string, password: string, firstName: string, lastName: string, middleName?: string, dateOfBirth?: string, phone?: string, isTeacher?: boolean): Observable<any> {
     return this.http.post<any>(`${this.API_URL}/register`, { 
-      email, 
-      password, 
-      firstName, 
-      lastName, 
-      dateOfBirth, 
-      phone 
+        email, 
+        password, 
+        firstName, 
+        lastName, 
+        middleName, 
+        dateOfBirth, 
+        phone,
+        isTeacher
     });
   }
 } 

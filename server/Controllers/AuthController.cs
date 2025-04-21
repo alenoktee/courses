@@ -132,7 +132,7 @@ namespace backend.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            Console.WriteLine($"Получен запрос на регистрацию: Email={request.Email}, FirstName={request.FirstName}, LastName={request.LastName}");
+            Console.WriteLine($"Получен запрос на регистрацию: Email={request.Email}, FirstName={request.FirstName}, LastName={request.LastName}, IsTeacher={request.IsTeacher}");
 
             if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
             {
@@ -156,7 +156,7 @@ namespace backend.Controllers
                     LastName = request.LastName,
                     BirthDate = request.DateOfBirth != null ? DateTime.Parse(request.DateOfBirth).ToUniversalTime() : DateTime.UtcNow,
                     PhoneNumber = request.Phone,
-                    Role = "обучающийся",
+                    Role = request.IsTeacher ? "преподаватель" : "обучающийся", // Используем новое поле
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow,
                     IsActive = true
@@ -354,7 +354,9 @@ namespace backend.Controllers
         public string Password { get; set; } = string.Empty;
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
+        public string? MiddleName { get; set; }
         public string? DateOfBirth { get; set; }
         public string? Phone { get; set; }
+        public bool IsTeacher { get; set; }
     }
 } 

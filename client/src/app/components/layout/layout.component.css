@@ -1,0 +1,66 @@
+.app-layout {
+  min-height: 100vh;
+}
+
+nz-header {
+  background: #001529;
+  padding: 0;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  height: 64px;
+  padding: 0 24px;
+}
+
+.logo {
+  width: 120px;
+  height: 31px;
+  background: rgba(255, 255, 255, 0.2);
+  margin-right: 24px;
+}
+
+.page-title {
+  color: white;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.header-right {
+  margin-left: auto;
+}
+
+nz-content {
+  margin-top: 64px;
+  padding: 0;
+}
+
+.content-container {
+  padding: 24px 50px;
+  min-height: calc(100vh - 64px - 70px);
+}
+
+.breadcrumb-container {
+  margin: 16px 0;
+}
+
+.main-content {
+  background: #fff;
+  padding: 24px;
+  min-height: 280px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+}
+
+nz-footer {
+  text-align: center;
+  height: 70px;
+  line-height: 70px;
+  padding: 0;
+  background: #f0f2f5;
+}
