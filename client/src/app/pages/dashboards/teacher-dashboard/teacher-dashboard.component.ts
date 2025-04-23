@@ -10,6 +10,9 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { LayoutComponent } from '../../../components/layout/layout.component';
 import { AuthService } from '../../../services/auth.service';
+import { NzPaginationModule } from 'ng-zorro-antd/pagination';
+
+
 
 @Component({
   selector: 'app-teacher-dashboard',
@@ -24,21 +27,31 @@ import { AuthService } from '../../../services/auth.service';
     NzBreadCrumbModule,
     NzIconModule,
     NzCardModule,
-    LayoutComponent
+    LayoutComponent,
+    NzPaginationModule
   ],
   templateUrl: './teacher-dashboard.component.html',
   styleUrl: './teacher-dashboard.component.css'
 })
 export class TeacherDashboardComponent implements OnInit {
   userName: string = '';
+  averageScore: number | null = null;
+  groups: string | null = null;
+  totalStudents: number | null = null;
   
   constructor(private authService: AuthService) {}
   
   ngOnInit() {
     this.authService.currentUser$.subscribe(user => {
       if (user) {
-        this.userName = user.name || 'Преподаватель';
+        this.userName = user.firstName || user.name || 'Преподаватель';
       }
     });
+    
+    // Здесь будет логика для получения данных с сервера
+    // Пока используем тестовые данные
+    this.averageScore = 4.7;
+    this.groups = 'Группа 1, Группа 2';
+    this.totalStudents = 42;
   }
 }

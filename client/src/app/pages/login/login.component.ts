@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -22,7 +22,8 @@ export class LoginComponent {
 
   constructor(
     private fb: FormBuilder,
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -33,12 +34,18 @@ export class LoginComponent {
   onSubmit() {
     if (this.loginForm.valid) {
       const { email, password } = this.loginForm.value;
-      this.authService.googleLogin(email, password).subscribe({
-        next: () => {
-          window.location.href = '/';
+      this.authService.login(email, password).subscribe({
+        next: (response) => {
+          // Перенаправление в зависимости от роли пользователя
+          if (response.user.role === 'преподаватель') {
+            this.router.navigate(['/pages/dashboards/teacher-dashboard']);
+          } else {
+            this.router.navigate(['/pages/dashboards/student-dashboard']);
+          }
         },
-        error: (error: any) => { // Можно заменить `any` на конкретный тип, например, `HttpErrorResponse`
-          this.errorMessage = error.error.message || 'Ошибка при входе';
+        error: (error) => {
+          console.error('Ошибка при входе:', error);
+          this.errorMessage = error.error?.message || 'Неверный email или пароль';
         }
       });
     }

@@ -6,10 +6,10 @@
       <div class="header-right">
         <ul nz-menu nzTheme="dark" nzMode="horizontal">
           <li nz-menu-item nzSelected *ngIf="userRole === 'teacher'">
-            <a routerLink="/pages/dashboards/teacher-dashboard">Дашборд</a>
+            <a routerLink="/pages/dashboards/teacher-dashboard">Личный кабинет</a>
           </li>
           <li nz-menu-item nzSelected *ngIf="userRole === 'student'">
-            <a routerLink="/pages/dashboards/student-dashboard">Дашборд</a>
+            <a routerLink="/pages/dashboards/student-dashboard">Личный кабинет</a>
           </li>
           <li nz-menu-item>
             <a routerLink="/auth/login" (click)="logout()">Выход</a>

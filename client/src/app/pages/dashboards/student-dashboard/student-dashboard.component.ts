@@ -37,7 +37,7 @@ export class StudentDashboardComponent implements OnInit {
   ngOnInit() {
     this.authService.currentUser$.subscribe(user => {
       if (user) {
-        this.userName = user.name || 'Студент';
+        this.userName = user.firstName || user.name || 'Студент';
       }
     });
   }

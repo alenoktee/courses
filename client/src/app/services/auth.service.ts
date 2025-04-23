@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, Observable, tap, of } from 'rxjs';
 import { Router } from '@angular/router';
 
 export interface User {
@@ -9,11 +9,16 @@ export interface User {
   email: string;
   googleId: string;
   profilePictureUrl: string;
+  firstName?: string;
+  lastName?: string;
+  phoneNumber?: string;
+  role?: string;
 }
 
 export interface AuthResponse {
   token: string;
   user: User;
+  isNewUser?: boolean;
 }
 
 @Injectable({
@@ -30,6 +35,9 @@ export class AuthService {
   
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
   public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
+  
+  private isNewUserSubject = new BehaviorSubject<boolean>(false);
+  public isNewUser$ = this.isNewUserSubject.asObservable();
 
   constructor(
     private http: HttpClient,
@@ -61,10 +69,20 @@ export class AuthService {
     }
   }
 
+  public login(email: string, password: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.API_URL}/login`, { email, password })
+      .pipe(
+        tap(response => this.handleAuthentication(response))
+      );
+  }
+
   public googleLogin(code: string, redirectUri: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.API_URL}/google`, { code, redirectUri })
       .pipe(
-        tap(response => this.handleAuthentication(response))
+        tap(response => {
+          this.handleAuthentication(response);
+          this.isNewUserSubject.next(response.isNewUser || false);
+        })
       );
   }
 
@@ -82,8 +100,9 @@ export class AuthService {
     
     this.currentUserSubject.next(null);
     this.isAuthenticatedSubject.next(false);
+    this.isNewUserSubject.next(false);
     
-    this.router.navigate(['/login']);
+    this.router.navigate(['/auth/login']);
   }
 
   public getToken(): string | null {
@@ -92,6 +111,10 @@ export class AuthService {
 
   public isLoggedIn(): boolean {
     return !!this.getToken();
+  }
+  
+  public isNewUser(): boolean {
+    return this.isNewUserSubject.getValue();
   }
 
   register(email: string, password: string, firstName: string, lastName: string, middleName?: string, dateOfBirth?: string, phone?: string, isTeacher?: boolean): Observable<any> {

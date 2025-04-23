@@ -37,6 +37,63 @@ namespace backend.Controllers
             _httpClientFactory = httpClientFactory;
         }
 
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        {
+            Console.WriteLine($"Получен запрос на вход: Email={request.Email}");
+
+            if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
+            {
+                Console.WriteLine("Ошибка: Email или пароль пустые");
+                return BadRequest("Email и пароль обязательны");
+            }
+
+            try 
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+                
+                if (user == null)
+                {
+                    Console.WriteLine($"Ошибка: пользователь с email {request.Email} не найден");
+                    return Unauthorized("Неверный email или пароль");
+                }
+
+                // Проверяем пароль с поддержкой разных алгоритмов хеширования
+                if (!VerifyPassword(request.Password, user.PasswordHash))
+                {
+                    Console.WriteLine("Ошибка: неверный пароль");
+                    return Unauthorized("Неверный email или пароль");
+                }
+
+                // Обновляем время последнего входа
+                user.LastLoginAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                Console.WriteLine($"Успешный вход пользователя с ID: {user.Id}");
+
+                var token = GenerateJwtToken(user);
+                return Ok(new { 
+                    token, 
+                    user = new {
+                        id = user.Id,
+                        email = user.Email,
+                        firstName = user.FirstName,
+                        lastName = user.LastName,
+                        phoneNumber = user.PhoneNumber,
+                        profilePictureUrl = user.ProfilePictureUrl,
+                        role = user.Role,
+                        googleId = user.GoogleId
+                    } 
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка при входе пользователя: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                return StatusCode(500, "Внутренняя ошибка сервера");
+            }
+        }
+
         [HttpPost("google")]
         public async Task<IActionResult> GoogleLogin([FromBody] GoogleAuthRequest request)
         {
@@ -164,10 +221,8 @@ namespace backend.Controllers
 
                 Console.WriteLine("Создание нового пользователя...");
 
-                // Хеширование пароля
-                using var hmac = new HMACSHA512();
-                var passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(request.Password));
-                user.PasswordHash = Convert.ToBase64String(passwordHash);
+                // Хеширование пароля с использованием SHA256
+                user.PasswordHash = HashPassword(request.Password);
 
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
@@ -299,6 +354,28 @@ namespace backend.Controllers
             {
                 var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
                 return Convert.ToBase64String(hashedBytes);
+            }
+        }
+
+        private bool VerifyPassword(string password, string storedHash)
+        {
+            // Сначала проверяем SHA256 (текущий метод)
+            string sha256Hash = HashPassword(password);
+            if (sha256Hash == storedHash)
+            {
+                return true;
+            }
+
+            // Если не совпало, пробуем с HMACSHA512 (старый метод)
+            try 
+            {
+                using var hmac = new HMACSHA512();
+                string hmacHash = Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(password)));
+                return hmacHash == storedHash;
+            }
+            catch
+            {
+                return false;
             }
         }
     }

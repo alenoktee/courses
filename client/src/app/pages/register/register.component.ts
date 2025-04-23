@@ -61,7 +61,7 @@ export class RegisterComponent {
         console.log('Registration data:', registrationData); 
 
         this.authService.setRegistrationData(registrationData);
-        this.router.navigate(['auth/register/step2']);
+        this.router.navigate(['/auth/register/step2']);
     }
 }
 

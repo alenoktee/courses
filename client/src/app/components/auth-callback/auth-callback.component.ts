@@ -59,7 +59,32 @@ export class AuthCallbackComponent implements OnInit {
           .subscribe({
             next: (response) => {
               console.log('Успешная авторизация', response);
-              this.router.navigate(['/']);
+              
+              // Если это новый пользователь, перенаправляем на второй шаг регистрации
+              if (response.isNewUser) {
+                // Сохраняем данные пользователя для использования на шаге 2
+                const userData = {
+                  email: response.user.email,
+                  password: '', // При входе через Google пароль не используется
+                  confirmPassword: '',
+                  firstName: response.user.firstName || '',
+                  lastName: response.user.lastName || '',
+                  middleName: '',
+                  dateOfBirth: '',
+                  phoneNumber: response.user.phoneNumber || '',
+                  isTeacher: false // По умолчанию - студент
+                };
+                
+                this.authService.setRegistrationData(userData);
+                this.router.navigate(['/auth/register/step2']);
+              } else {
+                // Уже зарегистрированный пользователь, перенаправляем на дашборд
+                if (response.user.role === 'преподаватель') {
+                  this.router.navigate(['/pages/dashboards/teacher-dashboard']);
+                } else {
+                  this.router.navigate(['/pages/dashboards/student-dashboard']);
+                }
+              }
             },
             error: (error) => {
               console.error('Ошибка авторизации', error);
@@ -70,11 +95,11 @@ export class AuthCallbackComponent implements OnInit {
                 console.error('API endpoint не найден. Проверьте правильность URL');
               }
               
-              this.router.navigate(['/login']);
+              this.router.navigate(['/auth/login']);
             }
           });
       } else {
-        this.router.navigate(['/login']);
+        this.router.navigate(['/auth/login']);
       }
     });
   }

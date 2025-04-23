@@ -19,4 +19,10 @@ namespace backend.Models
         public string Audience { get; set; } = string.Empty;
         public int ExpirationInMinutes { get; set; }
     }
+
+    public class LoginRequest
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
 } 

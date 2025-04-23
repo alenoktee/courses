@@ -1,35 +1,44 @@
-<app-layout pageTitle="Личный кабинет преподавателя" userRole="teacher">
-  <div class="dashboard-container">
-    <h1 nz-typography>Добро пожаловать, {{ userName }}!</h1>
-    <button nz-button nzType="primary">Тестовая кнопка</button>
-    
-    <nz-divider></nz-divider>
-    
-    <div nz-row [nzGutter]="16">
-      <div nz-col [nzSpan]="8">
-        <nz-card nzTitle="Мои курсы" [nzExtra]="extraTemplate">
-          <p>У вас нет активных курсов</p>
-          <button nz-button nzType="default" nzBlock>Создать курс</button>
-        </nz-card>
+  <app-layout pageTitle="Личный кабинет преподавателя" userRole="teacher">
+    <div class="dashboard-container">
+      <div nz-row nzJustify="center">
+        <h1 nz-typography nz-col nzSpan="24" style="text-align: center;">
+          Добро пожаловать, {{ userName }}!
+        </h1>
       </div>
-      <div nz-col [nzSpan]="8">
-        <nz-card nzTitle="Расписание занятий">
-          <p>Нет запланированных занятий</p>
-          <button nz-button nzType="default" nzBlock>Запланировать занятие</button>
-        </nz-card>
+      <div nz-row nzJustify="center">
+        <h1 nz-typography nz-col nzSpan="24" style="text-align: center;">
+          Техника коммуникации и основы командообразования
+        </h1>
       </div>
-      <div nz-col [nzSpan]="8">
-        <nz-card nzTitle="Статистика">
-          <p>Учеников: 0</p>
-          <p>Курсов: 0</p>
-          <p>Занятий проведено: 0</p>
-          <button nz-button nzType="default" nzBlock>Подробнее</button>
-        </nz-card>
+      <nz-divider></nz-divider>
+      <div nz-row>
+        <nz-col nzSpan="24">
+          <h3 nz-typography>Средний балл всех студентов: {{ averageScore || 0 }}</h3>
+          <h3 nz-typography>Ваши группы: {{ groups || 'Нет групп' }}</h3>
+          <h3 nz-typography>Всего студентов: {{ totalStudents || 0 }}</h3>
+        </nz-col>
       </div>
     </div>
-  </div>
-</app-layout>
+    
 
-<ng-template #extraTemplate>
-  <a nz-button nzType="link" nzSize="small"><span nz-icon nzType="plus"></span></a>
-</ng-template>
+    <div style="background: #ECECEC; padding:30px;">
+      <nz-card style="width: 300px;" nzTitle="Группа" [nzBodyStyle]="{ padding: '24px' }">
+        <div style="display: flex; flex-direction: column; margin-left: -8px;">
+          <p class="m-8">Количество студентов: </p>
+          <p style="">Занятий пройдено: </p>
+          <p style="margin: 8px 0 8px 8px;">Занятий осталось: </p>
+          
+          <div style="margin: 0">
+            <a nz-button nzType="link" nzSize="small" style="padding-left: 0;">
+              <span nz-icon nzType="more"></span> Открыть
+            </a>
+          </div>
+        </div>
+      </nz-card>
+    </div>
+
+
+    <div nz-row nzJustify="center">
+      <nz-pagination [nzPageIndex]="2" [nzTotal]="50" nzSimple></nz-pagination>
+    </div>
+  </app-layout>

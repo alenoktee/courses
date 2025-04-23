@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
@@ -13,13 +13,14 @@ import { AuthService } from '../../../services/auth.service';
     RouterModule
   ],
   templateUrl: './register-step2.component.html',
-  styleUrls: ['./register-step2.component.scss']
+  styleUrl: './register-step2.component.scss'
 })
-export class RegisterStep2Component {
+export class RegisterStep2Component implements OnInit {
   registerForm!: FormGroup;
   errorMessage: string = '';
   minDate: string;
   maxDate: string;
+  isGoogleAuth: boolean = false;
 
   constructor(
     private fb: FormBuilder,
@@ -36,6 +37,31 @@ export class RegisterStep2Component {
     this.maxDate = maxDate.toISOString().split('T')[0];
 
     this.initializeForm();
+  }
+
+  ngOnInit() {
+    // Получаем данные из первого шага регистрации
+    const registrationData = this.authService.getRegistrationData();
+    
+    if (registrationData) {
+      // Определяем, была ли авторизация через Google (если пароль пустой)
+      this.isGoogleAuth = !registrationData.password;
+      
+      // Заполняем форму данными
+      if (registrationData.firstName) {
+        this.registerForm.patchValue({
+          firstName: registrationData.firstName,
+          lastName: registrationData.lastName,
+          middleName: registrationData.middleName || '',
+          phone: registrationData.phoneNumber || '',
+          dateOfBirth: registrationData.dateOfBirth || '',
+          isTeacher: registrationData.isTeacher || false
+        });
+      }
+    } else {
+      // Если нет данных регистрации, перенаправляем на первый шаг
+      this.router.navigate(['/auth/register']);
+    }
   }
 
   private initializeForm() {
@@ -61,7 +87,7 @@ export class RegisterStep2Component {
             Validators.required,
             this.validateDateOfBirth
         ]],
-        phone: ['', [
+        phone: ['', [ // Переименовано с phoneNumber на phone
             Validators.required,
             Validators.pattern('^\\+375(29|25|44|33)\\d{7}$')
         ]],
@@ -128,13 +154,14 @@ export class RegisterStep2Component {
       ).subscribe({
         next: (response) => {
           if (registrationData.isTeacher) {
-            this.router.navigate(['/pages/dashboards/teacher-dashboard']); 
+            this.router.navigate(['/pages/dashboards/teacher-dashboard']);
           } else {
             this.router.navigate(['/pages/dashboards/student-dashboard']);
           }
         },
         error: (error) => {
-          this.errorMessage = error.message || 'Произошла ошибка при регистрации';
+          console.error('Ошибка при регистрации:', error);
+          this.errorMessage = error.error?.message || 'Произошла ошибка при регистрации';
         }
       });
     }
